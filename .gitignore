@@ -1,0 +1,160 @@
+# ================================
+
+# Python
+
+# ================================
+
+**pycache**/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environments
+
+.venv/
+venv/
+env/
+ENV/
+
+# Python packaging
+
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Test / coverage
+
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+
+# ================================
+
+# Environment / Secrets
+
+# ================================
+
+.env
+.env.*
+!.env.example
+
+# ================================
+
+# GYANI generated outputs
+
+# ================================
+
+backend/outputs/*
+!backend/outputs/.gitkeep
+
+# Generated NetCDF / scientific data
+
+backend/data/*.nc
+backend/data/*.nc4
+backend/data/*.netcdf
+backend/data/*.zarr/
+
+# Generated media
+
+backend/outputs/*.png
+backend/outputs/*.jpg
+backend/outputs/*.jpeg
+backend/outputs/*.mp4
+backend/outputs/*.gif
+backend/outputs/*.webm
+
+# ================================
+
+# Node / React / Vite
+
+# ================================
+
+node_modules/
+frontend/node_modules/
+
+# Build output
+
+frontend/dist/
+frontend/build/
+
+# Vite
+
+frontend/.vite/
+
+# npm logs
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ================================
+
+# IDE / Editors
+
+# ================================
+
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
+.idea/
+*.iml
+
+# ================================
+
+# OS files
+
+# ================================
+
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ================================
+
+# Temporary files
+
+# ================================
+
+*.tmp
+*.temp
+*.log
+*.swp
+*.swo
+*~
+
+# ================================
+
+# Jupyter / Notebooks
+
+# ================================
+
+.ipynb_checkpoints/
+
+# ================================
+
+# Model / ML artifacts
+
+# ================================
+
+*.pt
+*.pth
+*.ckpt
+*.pkl
+*.pickle
+*.joblib
+
+# ================================
+
+# Local configuration
+
+# ================================
+
+*.local
+*.local.json
+config.local.*

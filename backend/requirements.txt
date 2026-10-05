@@ -1,0 +1,10 @@
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pydantic==2.10.5
+xarray==2025.1.2
+netCDF4==1.7.2
+numpy==2.2.2
+matplotlib==3.10.0
+imageio==2.36.1
+imageio-ffmpeg==0.5.1
+python-multipart==0.0.20
