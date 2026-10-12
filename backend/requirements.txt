@@ -8,3 +8,5 @@ matplotlib==3.10.0
 imageio==2.36.1
 imageio-ffmpeg==0.5.1
 python-multipart==0.0.20
+pytest==9.1.1
+httpx==0.28.1

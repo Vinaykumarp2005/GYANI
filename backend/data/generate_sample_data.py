@@ -72,6 +72,8 @@ ds = xr.Dataset(
         "title": "GYANI Prototype Synthetic Ocean Dataset",
         "source": "Synthetic demo data — NOT INCOIS observations/model output",
         "description": "Generated solely for software prototype testing.",
+        "scientific_classification": "SYNTHETIC_PROTOTYPE",
+        "institution": "INCOIS Prototype Demo",
     },
 )
 
