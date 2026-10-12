@@ -1120,12 +1120,13 @@ body {
 .query-workspace-card {
   background: var(--card-bg);
   border: 1px solid var(--card-border);
+  border-top: 3px solid var(--incois-blue-accent);
   border-radius: 12px;
-  padding: 22px;
-  box-shadow: var(--shadow-sm);
+  padding: 24px;
+  box-shadow: 0 4px 16px rgba(11, 37, 69, 0.07);
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
 }
 
 .workspace-header {
@@ -1133,17 +1134,18 @@ body {
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 10px;
 }
 
 .workspace-title-group {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  align-items: flex-start;
+  gap: 10px;
 }
 
 .workspace-title-icon {
   color: var(--incois-blue-accent);
+  margin-top: 2px;
 }
 
 .workspace-title {
@@ -1152,38 +1154,46 @@ body {
   color: var(--incois-navy-dark);
 }
 
+.workspace-desc {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
 .workspace-subtitle-badge {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   background: var(--incois-cyan-light);
   color: #0369a1;
-  font-weight: 600;
-  padding: 3px 10px;
-  border-radius: 12px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 14px;
+  border: 1px solid #bae6fd;
 }
 
 .query-input-wrapper {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 .ocean-query-textarea {
   width: 100%;
-  padding: 14px;
+  padding: 14px 16px;
   border: 1.5px solid var(--card-border);
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 0.95rem;
   font-family: inherit;
   resize: vertical;
   color: var(--text-main);
   outline: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: all 0.2s ease;
   background: #fbfcfe;
+  line-height: 1.5;
 }
 
 .ocean-query-textarea:focus {
   border-color: var(--incois-blue-accent);
-  box-shadow: 0 0 0 3px rgba(0, 119, 153, 0.12);
+  box-shadow: 0 0 0 3px rgba(0, 119, 153, 0.15);
   background: #ffffff;
 }
 
@@ -1196,33 +1206,34 @@ body {
 }
 
 .query-hint {
-  font-size: 0.75rem;
+  font-size: 0.76rem;
   color: var(--text-muted);
 }
 
 .generate-submit-btn {
-  background: linear-gradient(135deg, var(--incois-navy-primary), var(--incois-blue-accent));
+  background: linear-gradient(135deg, var(--incois-navy-primary) 0%, var(--incois-blue-accent) 100%);
   color: #ffffff;
   border: none;
-  border-radius: 6px;
-  padding: 10px 22px;
+  border-radius: 8px;
+  padding: 11px 24px;
   font-size: 0.92rem;
   font-weight: 700;
   display: inline-flex;
   align-items: center;
   gap: 8px;
   cursor: pointer;
-  transition: transform 0.1s ease, filter 0.15s ease;
-  box-shadow: 0 2px 6px rgba(11, 37, 69, 0.25);
+  transition: all 0.18s ease;
+  box-shadow: 0 4px 12px rgba(11, 37, 69, 0.25);
 }
 
 .generate-submit-btn:hover:not(:disabled) {
   filter: brightness(1.1);
   transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(11, 37, 69, 0.35);
 }
 
 .generate-submit-btn:disabled {
-  opacity: 0.6;
+  opacity: 0.55;
   cursor: not-allowed;
 }
 
@@ -1239,9 +1250,9 @@ body {
 .suggested-prompts-section {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   border-top: 1px dashed var(--card-border);
-  padding-top: 12px;
+  padding-top: 14px;
 }
 
 .prompts-header {
@@ -1264,22 +1275,37 @@ body {
 }
 
 .prompt-chip {
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
-  color: var(--text-secondary);
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  color: #334155;
   border-radius: 20px;
-  padding: 5px 12px;
-  font-size: 0.78rem;
+  padding: 6px 14px;
+  font-size: 0.8rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.18s ease;
   text-align: left;
 }
 
 .prompt-chip:hover {
   background: #e0f2fe;
   color: #0369a1;
-  border-color: #bae6fd;
+  border-color: #38bdf8;
   transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(14, 165, 233, 0.15);
+}
+
+.prompt-chip .chip-arrow {
+  opacity: 0.5;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.prompt-chip:hover .chip-arrow {
+  opacity: 1;
+  transform: translateX(3px);
 }
 
 /* --------------------------------------------------------------------------

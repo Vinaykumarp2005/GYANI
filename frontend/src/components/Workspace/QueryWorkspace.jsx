@@ -1,5 +1,5 @@
 import React from "react";
-import { Search, Loader2, Sparkles, Filter, Compass } from "lucide-react";
+import { Loader2, Sparkles, Compass, ArrowRight } from "lucide-react";
 
 export default function QueryWorkspace({
   query,
@@ -10,14 +10,6 @@ export default function QueryWorkspace({
   t,
   onSelectExample,
 }) {
-  const quickFilters = [
-    { label: "3D Temperature Layers", querySnippet: "Show 3D temperature profile in Arabian Sea June 2025" },
-    { label: "SST Animation", querySnippet: "Show SST evolution in the Arabian Sea during June 2025" },
-    { label: "Current Pattern", querySnippet: "Show the ocean current pattern during June 2025" },
-    { label: "Depth-Time Profile", querySnippet: "How did temperature change with depth at 10 N 75 E during June 2025?" },
-    { label: "Coastal Upwelling (Concept)", querySnippet: "What is coastal upwelling?" },
-  ];
-
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -31,11 +23,16 @@ export default function QueryWorkspace({
     <div className="query-workspace-card">
       <div className="workspace-header">
         <div className="workspace-title-group">
-          <Compass size={18} className="workspace-title-icon" />
-          <h2 className="workspace-title">{t.question || "Ocean-Science Query"}</h2>
+          <Compass size={20} className="workspace-title-icon" />
+          <div>
+            <h3 className="workspace-title">{t.question || "Ocean-Science Query"}</h3>
+            <p className="workspace-desc">
+              Ask natural-language questions in English, Telugu, Hindi, or Tamil.
+            </p>
+          </div>
         </div>
         <span className="workspace-subtitle-badge">
-          Natural Language to Ocean Analytics
+          AI + INCOIS Numerical NetCDF Engine
         </span>
       </div>
 
@@ -45,12 +42,12 @@ export default function QueryWorkspace({
           value={query}
           onChange={(e) => onQueryChange(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder={t.placeholder || "Ask an ocean-science question or explore 3D depth layers..."}
+          placeholder={t.placeholder || "Ask an oceanographic question or query 3D depth layers (e.g. 'Show 3D temperature profile in Arabian Sea')..."}
           rows={3}
           className="ocean-query-textarea"
         />
         <div className="query-input-actions">
-          <span className="query-hint">Press Enter to submit</span>
+          <span className="query-hint">Press [Enter] to submit query</span>
           <button
             type="button"
             onClick={onSubmit}
@@ -72,7 +69,7 @@ export default function QueryWorkspace({
         </div>
       </div>
 
-      {/* Suggested Prompts in Current Language */}
+      {/* Suggested Prompts in Current Selected Language */}
       <div className="suggested-prompts-section">
         <div className="prompts-header">
           <Sparkles size={13} className="sparkle-icon" />
@@ -86,7 +83,8 @@ export default function QueryWorkspace({
               onClick={() => onSelectExample(ex)}
               className="prompt-chip"
             >
-              {ex}
+              <span>{ex}</span>
+              <ArrowRight size={11} className="chip-arrow" />
             </button>
           ))}
         </div>
