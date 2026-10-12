@@ -1,41 +1,65 @@
 import React, { useState } from "react";
-import { ChevronDown, ExternalLink, Sparkles } from "lucide-react";
+import { ChevronDown, ExternalLink, Sparkles, Database, Layers, ShieldAlert, Compass } from "lucide-react";
 
 export default function INCOISNavRibbon({ onSelectSection }) {
   const [activeMenu, setActiveMenu] = useState("gyani");
 
   const navItems = [
-    { id: "home", label: "Home", href: "https://incois.gov.in/site/index.jsp", isExternal: true },
+    {
+      id: "home",
+      label: "Home",
+      href: "https://incois.gov.in/site/index.jsp",
+      isExternal: true,
+    },
     {
       id: "services",
-      label: "Ocean Services",
+      label: "Operational Services",
       isDropdown: true,
       children: [
-        { label: "Ocean State Forecast (OSF)", href: "https://incois.gov.in/site/forecast.jsp" },
-        { label: "Tsunami Early Warning (ITEWC)", href: "https://tsunami.incois.gov.in/TEWS/" },
-        { label: "Potential Fishing Zone (PFZ)", href: "https://incois.gov.in/site/ecosystem.jsp" },
-        { label: "High Wave / Swell Alerts", href: "https://incois.gov.in/site/services/hwa.jsp" },
+        { label: "Ocean State Forecast (OSF)", href: "https://incois.gov.in/site/forecast.jsp", desc: "Wave, wind, and current forecasts" },
+        { label: "Tsunami Early Warning (ITEWC)", href: "https://tsunami.incois.gov.in/TEWS/", desc: "24x7 seismic and tsunami monitoring" },
+        { label: "Potential Fishing Zone (PFZ)", href: "https://incois.gov.in/site/ecosystem.jsp", desc: "Satellite thermal and chlorophyll fronts" },
+        { label: "High Wave / Swell Alerts", href: "https://incois.gov.in/site/services/hwa.jsp", desc: "Coastal swell and surge advisories" },
       ],
     },
     {
-      id: "data",
-      label: "Data Holdings",
+      id: "portals",
+      label: "INCOIS Portals & Data",
       isDropdown: true,
       children: [
-        { label: "Argo Analytics Dashboard", href: "https://incois.gov.in/argo" },
-        { label: "Ocean Observation Network (OON)", href: "https://incois.gov.in/site/datainfo/OON.jsp" },
-        { label: "ERDDAP Server", href: "https://erddap.incois.gov.in/" },
-        { label: "Live Access Server (LAS)", href: "https://las.incois.gov.in/" },
+        { label: "Argo Float Analytics", href: "https://incois.gov.in/argo", desc: "Robotic temperature & depth profilers" },
+        { label: "Ocean Observation Network (OON)", href: "https://incois.gov.in/site/datainfo/OON.jsp", desc: "Moored buoys, tide gauges, drifters" },
+        { label: "Live Access Server (LAS)", href: "https://las.incois.gov.in/", desc: "Gridded model visualizer & OPeNDAP" },
+        { label: "ERDDAP Data Server", href: "https://erddap.incois.gov.in/", desc: "Standardized scientific data access" },
+        { label: "SAMUDRA Mobile App", href: "https://incois.gov.in/site/SAMUDRA/index.html", desc: "Mobile marine advisories" },
       ],
     },
-    { id: "research", label: "Modelling & Research", href: "https://incois.gov.in/site/datainfo/modelling/modelling.jsp", isExternal: true },
-    { id: "mission", label: "Deep Ocean Mission", href: "https://incois.gov.in/site/deep-ocean.jsp", isExternal: true },
-    { id: "gyani", label: "GYANI Visualizer", isHighlight: true, isAction: true },
-    { id: "contact", label: "Contact Us", href: "https://incois.gov.in/site/contactus.jsp", isExternal: true },
+    {
+      id: "research",
+      label: "Modelling & Missions",
+      isDropdown: true,
+      children: [
+        { label: "Deep Ocean Mission", href: "https://incois.gov.in/site/deep-ocean.jsp", desc: "MoES exploration initiative" },
+        { label: "Ocean Modelling & Forecasting", href: "https://incois.gov.in/site/datainfo/modelling/modelling.jsp", desc: "ROMS and wave numerical models" },
+        { label: "Monsoon Mission", href: "https://incois.gov.in/site/uc.jsp", desc: "Coupled climate model research" },
+      ],
+    },
+    {
+      id: "gyani",
+      label: "GYANI 3D Visualizer",
+      isHighlight: true,
+      isAction: true,
+    },
+    {
+      id: "contact",
+      label: "Contact Us",
+      href: "https://incois.gov.in/site/contactus.jsp",
+      isExternal: true,
+    },
   ];
 
   return (
-    <nav className="incois-primary-nav-ribbon">
+    <nav className="incois-primary-nav-ribbon" aria-label="Main Navigation">
       <div className="nav-ribbon-inner">
         <ul className="nav-ribbon-list">
           {navItems.map((item) => (
@@ -67,10 +91,10 @@ export default function INCOISNavRibbon({ onSelectSection }) {
                 </a>
               ) : (
                 <div className="nav-dropdown-trigger">
-                  <span className="nav-ribbon-link">
+                  <button type="button" className="nav-ribbon-link dropdown-toggle">
                     <span>{item.label}</span>
                     <ChevronDown size={12} className="dropdown-arrow" />
-                  </span>
+                  </button>
                   {item.children && (
                     <div className="nav-dropdown-menu">
                       {item.children.map((child) => (
@@ -81,7 +105,8 @@ export default function INCOISNavRibbon({ onSelectSection }) {
                           rel="noopener noreferrer"
                           className="dropdown-menu-item"
                         >
-                          {child.label}
+                          <span className="dropdown-child-title">{child.label}</span>
+                          {child.desc && <span className="dropdown-child-desc">{child.desc}</span>}
                         </a>
                       ))}
                     </div>
