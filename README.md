@@ -22,33 +22,31 @@ A runnable prototype of the visualization module described in the GYANI project 
    - conceptual ocean-science diagrams
 6. Returns the generated visualization and metadata through FastAPI.
 7. Provides a React frontend for testing.
-8. Includes multilingual UI and query support for English, Telugu, Hindi, and Tamil.
+8. Renders interactive 3D underwater depth layers (Three.js & React Three Fiber) with real-time temporal playback animations.
+9. Includes multilingual UI and query support for English, Telugu, Hindi, and Tamil.
 
 The sample data is synthetic and clearly marked as demo data. Replace the dataset adapter later with verified INCOIS NetCDF/Zarr/model/observation data.
 
 ## Architecture
 
 ```text
-React UI
+React 18 + R3F Workspace (INCOIS Institutional Design)
    |
-   v
-FastAPI /api/visualize
-   |
-   +--> Query parser
-   |
-   +--> Visualization selector
-   |
-   +--> Dataset adapter
-   |       |
-   |       +--> sample NetCDF now
-   |       +--> INCOIS NetCDF/Zarr later
-   |
-   +--> Matplotlib / xarray
-   |
-   +--> MP4/PNG output
-   |
-   v
-Visualization + metadata
+   +--> /api/visualize / /api/visualize/3d
+           |
+           +--> Multilingual Query Parser (EN, TE, HI, TA)
+           |
+           +--> Visualization Selector (3D WebGL vs 2D Matplotlib vs Conceptual)
+           |
+           +--> Dataset Adapter (xarray NetCDF multi-depth slicing)
+           |       |
+           |       +--> sample NetCDF (0m - 200m)
+           |       +--> INCOIS NetCDF/Zarr later
+           |
+           +--> Output Pathways:
+                   +--> 3D Tensor Stream (JSON depth grid for WebGL)
+                   +--> Matplotlib Raster (PNG) / Video (MP4)
+                   +--> Conceptual Schematics
 ```
 
 ## Requirements
