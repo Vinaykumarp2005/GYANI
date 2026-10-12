@@ -5,7 +5,7 @@ from fastapi.staticfiles import StaticFiles
 
 from .models import VisualizationRequest
 from .services.query_parser import parse_query
-from .services.dataset_service import load_dataset, subset_dataset, dataset_metadata
+from .services.dataset_service import load_dataset, subset_dataset, dataset_metadata, extract_3d_grid
 from .services.visualization_service import generate
 from .services.conceptual_service import conceptual_diagram
 
@@ -61,22 +61,44 @@ def visualize(request: VisualizationRequest):
             return {
                 "success": True,
                 "category": "conceptual",
+                "is_3d": False,
                 "intent": intent.model_dump(),
                 "visualization": {
                     "url": f"/outputs/{filename}",
                     "media_type": media_type
                 },
                 "explanation": explanation,
-                "metadata": {"provenance": "Prototype conceptual schematic"}
+                "metadata": {
+                    "source": "Prototype conceptual schematic",
+                    "scientific_classification": "CONCEPTUAL_SCHEMATIC",
+                    "provenance": "Generated scientific illustration"
+                }
             }
 
         ds = load_dataset()
         try:
+            if intent.is_3d or intent.visualization == "3d_depth_layers":
+                grid_3d = extract_3d_grid(ds, intent)
+                return {
+                    "success": True,
+                    "category": "data",
+                    "is_3d": True,
+                    "intent": intent.model_dump(),
+                    "grid_3d": grid_3d,
+                    "explanation": (
+                        f"Generated interactive 3D depth-layer visualization for {intent.variable} "
+                        f"with {len(grid_3d['coordinates']['depths'])} depth levels across "
+                        f"{len(grid_3d['coordinates']['times'])} time steps."
+                    ),
+                    "metadata": dataset_metadata(ds)
+                }
+
             subset = subset_dataset(ds, intent)
             filename, media_type = generate(subset, intent)
             return {
                 "success": True,
                 "category": "data",
+                "is_3d": False,
                 "intent": intent.model_dump(),
                 "visualization": {
                     "url": f"/outputs/{filename}",
@@ -93,3 +115,24 @@ def visualize(request: VisualizationRequest):
 
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.post("/api/visualize/3d")
+def visualize_3d(request: VisualizationRequest):
+    intent = parse_query(request.query)
+    intent.is_3d = True
+    intent.visualization = "3d_depth_layers"
+    ds = load_dataset()
+    try:
+        grid_3d = extract_3d_grid(ds, intent)
+        return {
+            "success": True,
+            "category": "data",
+            "is_3d": True,
+            "intent": intent.model_dump(),
+            "grid_3d": grid_3d,
+            "explanation": f"Generated interactive 3D depth-layer grid for {intent.variable}.",
+            "metadata": dataset_metadata(ds)
+        }
+    finally:
+        ds.close()

@@ -19,16 +19,19 @@ MULTILINGUAL_ALIASES = {
     "ఉష్ణోగ్రత": "temperature", "లోతు": "depth", "సముద్ర ప్రవాహం": "current",
     "ప్రవాహ నమూనా": "current pattern", "మార్పును": "evolution", "మారింది": "change",
     "జూన్": "june", "అప్‌వెల్లింగ్": "upwelling", "అంటే ఏమిటి": "what is",
+    "3డి": "3d", "3D దృశ్యం": "3d view", "లోతు పొరలు": "depth layers",
     # Hindi
     "अरब सागर": "arabian sea", "बंगाल की खाड़ी": "bay of bengal",
     "तापमान": "temperature", "गहराई": "depth", "समुद्री धारा": "current",
     "धारा का पैटर्न": "current pattern", "बदलाव": "evolution", "बदला": "change",
     "जून": "june", "अपवेलिंग": "upwelling", "क्या है": "what is",
+    "3डी": "3d", "3D दृश्य": "3d view", "गहराई की परतें": "depth layers",
     # Tamil
     "அரபிக்கடலில்": "arabian sea", "அரபிக்கடல்": "arabian sea", "வங்காள விரிகுடாவில்": "bay of bengal", "வங்காள விரிகுடா": "bay of bengal",
     "வெப்பநிலை": "temperature", "ஆழம்": "depth", "நீரோட்டம்": "current",
     "நீரோட்ட வடிவம்": "current pattern", "மாற்றத்தைக்": "evolution", "மாற்றம்": "evolution", "மாறியது": "change",
     "ஜூன்": "june", "மேலெழுச்சி": "upwelling", "என்றால் என்ன": "what is",
+    "3டி": "3d", "3D காட்சி": "3d view", "ஆழ அடுக்குகள்": "depth layers",
 }
 
 def normalize_multilingual_query(q: str) -> str:
@@ -125,7 +128,17 @@ def parse_query(query: str) -> VisualizationIntent:
     lat, lon = find_coordinates(q)
     region = detect_region(q)
 
-    if "depth" in ql or "vertical" in ql or "profile" in ql:
+    is_3d = False
+    three_d_keywords = [
+        "3d", "3-d", "three dimensional", "3 dimensional",
+        "depth layer", "depth layers", "underwater layer", "underwater layers", "3d view"
+    ]
+    if any(k in ql for k in three_d_keywords):
+        viz = "3d_depth_layers"
+        is_3d = True
+        if not variable:
+            variable = "temperature"
+    elif "depth" in ql or "vertical" in ql or "profile" in ql:
         viz = "depth_time"
     elif "compare" in ql or "observation" in ql and "model" in ql:
         viz = "comparison"
@@ -147,4 +160,5 @@ def parse_query(query: str) -> VisualizationIntent:
         end_date=end,
         latitude=lat,
         longitude=lon,
+        is_3d=is_3d,
     )
