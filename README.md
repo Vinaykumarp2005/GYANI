@@ -21,9 +21,10 @@ A runnable prototype of the visualization module described in the GYANI project 
    - time-series plots
    - conceptual ocean-science diagrams
 6. Returns the generated visualization and metadata through FastAPI.
-7. Provides a React frontend for testing.
 8. Renders interactive 3D underwater depth layers (Three.js & React Three Fiber) with real-time temporal playback animations.
-9. Includes multilingual UI and query support for English, Telugu, Hindi, and Tamil.
+9. Displays revolving 3D oceanographic models: Digital Ocean Globe with INCOIS buoys, Argo Profiling Float, and Marine Compass Gyroscope.
+10. Provides an institutional layout aligned with the official INCOIS portal (MoES topbar, navigation ribbon, live bulletin ticker, and service cards).
+11. Includes multilingual UI and query support for English, Telugu, Hindi, and Tamil.
 
 The sample data is synthetic and clearly marked as demo data. Replace the dataset adapter later with verified INCOIS NetCDF/Zarr/model/observation data.
 

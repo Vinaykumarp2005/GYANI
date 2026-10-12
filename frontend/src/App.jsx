@@ -1,9 +1,14 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef } from "react";
 import InstitutionalHeader from "./components/Header/InstitutionalHeader";
+import INCOISNavRibbon from "./components/Header/INCOISNavRibbon";
+import AdvisoryTicker from "./components/Common/AdvisoryTicker";
+import OceanGlobe3D from "./components/ThreeD/OceanGlobe3D";
+import ArgoFloat3D from "./components/ThreeD/ArgoFloat3D";
+import INCOISServiceCards from "./components/Home/INCOISServiceCards";
 import QueryWorkspace from "./components/Workspace/QueryWorkspace";
 import VisualizationViewport from "./components/Viewport/VisualizationViewport";
 import ScientificMetadataPanel from "./components/Metadata/ScientificMetadataPanel";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Box, Compass, Sparkles, ChevronRight, Waves, Layers } from "lucide-react";
 
 const API = "http://localhost:8000";
 
@@ -16,6 +21,10 @@ const languages = {
 
 const copy = {
   en: {
+    heroTitle: "Intelligent Ocean-Science Visualization",
+    heroSubtitle: "Ask natural-language questions across the Indian Ocean realm. Explore interactive 3D underwater temperature depth profiles, temporal animations, and numerical model datasets.",
+    exploreBtn: "Explore 3D Depth Layers",
+    instrumentBtn: "View 3D Argo Profiler",
     question: "Ocean-Science Query",
     placeholder: "Ask an oceanographic question or query 3D depth layers (e.g. 'Show 3D temperature profile in Arabian Sea')...",
     generate: "Generate Visualization",
@@ -29,6 +38,10 @@ const copy = {
     imageAlt: "Generated scientific visualization",
   },
   te: {
+    heroTitle: "సముద్ర శాస్త్ర విజువలైజేషన్ వేదిక",
+    heroSubtitle: "హిందూ మహాసముద్ర పరిధిలో సహజ భాషా ప్రశ్నలను అడగండి. పరస్పర ప్రతిస్పందించే 3D లోతు ఉష్ణోగ్రత నమూనాలు, కాలిక యానిమేషన్లను అన్వేషించండి.",
+    exploreBtn: "3D లోతు పొరలను చూడండి",
+    instrumentBtn: "3D ఆర్గో ప్రొఫైలర్ నమూనా",
     question: "సముద్ర శాస్త్ర ప్రశ్న",
     placeholder: "సముద్ర శాస్త్ర ప్రశ్నించండి లేదా 3D లోతు పొరలను అన్వేషించండి (ఉదా. 'అరేబియా సముద్రంలో ఉష్ణోగ్రత 3D దృశ్యం')...",
     generate: "విజువలైజేషన్ రూపొందించండి",
@@ -42,6 +55,10 @@ const copy = {
     imageAlt: "రూపొందించిన శాస్త్రీయ విజువలైజేషన్",
   },
   hi: {
+    heroTitle: "बुद्धिमान समुद्र-विज्ञान विज़ुअलाइज़ेशन",
+    heroSubtitle: "हिंद महासागर क्षेत्र से जुड़े प्रश्न पूछें। इंटरएक्टिव 3D पानी के नीचे तापमान और गहराई प्रोफाइल, समय-आधारित एनिमेशन देखें।",
+    exploreBtn: "3D गहराई की परतें देखें",
+    instrumentBtn: "3D आर्गो फ्लोट मॉडल",
     question: "समुद्र-विज्ञान प्रश्न",
     placeholder: "समुद्र-विज्ञान का प्रश्न पूछें या 3D गहराई की परतें देखें (उदा. 'अरब सागर में तापमान का 3D दृश्य')...",
     generate: "विज़ुअलाइज़ेशन बनाएँ",
@@ -55,6 +72,10 @@ const copy = {
     imageAlt: "तैयार वैज्ञानिक विज़ुअलाइज़ेशन",
   },
   ta: {
+    heroTitle: "அறிவியல் கடலியல் காட்சிப்படுத்தல் தளம்",
+    heroSubtitle: "இந்தியப் பெருங்கடல் தொடர்பான கேள்விகளைக் கேளுங்கள். ஊடாடும் 3D நீருக்கடியில் வெப்பநிலை மற்றும் ஆழப் படங்கள், அசைவூட்டங்களை ஆராயுங்கள்.",
+    exploreBtn: "3D ஆழ அடுக்குகளைக் காட்டு",
+    instrumentBtn: "3D ஆர்கோ மிதவை மாதிரி",
     question: "கடலியல் கேள்வி",
     placeholder: "கடலியல் கேள்வியைக் கேளுங்கள் அல்லது 3D ஆழ அடுக்குகளை ஆராயுங்கள் (எ.கா. 'அரபிக்கடலில் வெப்பநிலை 3D காட்சி')...",
     generate: "காட்சிப்படுத்தலை உருவாக்கு",
@@ -110,11 +131,14 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState("");
+  const [showInstrumentModel, setShowInstrumentModel] = useState(false);
 
   // Temporal animation state
   const [timeIndex, setTimeIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
+
+  const workspaceRef = useRef(null);
 
   const t = copy[language];
   const currentExamples = useMemo(() => examples[language], [language]);
@@ -125,6 +149,12 @@ export default function App() {
     setResult(null);
     setError("");
   }
+
+  const scrollToWorkspace = () => {
+    if (workspaceRef.current) {
+      workspaceRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  };
 
   async function handleGenerate(customQuery) {
     const q = customQuery !== undefined ? customQuery : query;
@@ -144,6 +174,7 @@ export default function App() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.detail || t.error);
       setResult(data);
+      scrollToWorkspace();
     } catch (e) {
       setError(e.message);
     } finally {
@@ -158,7 +189,7 @@ export default function App() {
 
   return (
     <div className="gyani-institutional-app" lang={language}>
-      {/* Institutional MoES/INCOIS Header */}
+      {/* 1. Institutional MoES / INCOIS Header */}
       <InstitutionalHeader
         language={language}
         onLanguageChange={changeLanguage}
@@ -166,8 +197,74 @@ export default function App() {
         copy={copy}
       />
 
-      {/* Main Scientific Workspace Container */}
-      <main className="gyani-main-container">
+      {/* 2. Primary Navigation Ribbon (INCOIS Style) */}
+      <INCOISNavRibbon onSelectSection={scrollToWorkspace} />
+
+      {/* 3. Live Ocean Advisory & Alert Ticker */}
+      <AdvisoryTicker />
+
+      {/* 4. Hero Section with Revolving 3D Ocean Globe */}
+      <section className="incois-hero-showcase">
+        <div className="hero-inner-container">
+          <div className="hero-text-block">
+            <div className="hero-badge-tag">
+              <Sparkles size={13} className="hero-badge-icon" />
+              <span>INCOIS OCEAN KNOWLEDGE ENTERPRISE</span>
+            </div>
+            <h1 className="hero-main-heading">{t.heroTitle}</h1>
+            <p className="hero-description">{t.heroSubtitle}</p>
+
+            <div className="hero-actions-row">
+              <button
+                type="button"
+                onClick={() => handleGenerate(currentExamples[0])}
+                className="hero-primary-btn"
+              >
+                <Layers size={17} />
+                <span>{t.exploreBtn}</span>
+                <ChevronRight size={15} />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowInstrumentModel(!showInstrumentModel)}
+                className={`hero-secondary-btn ${showInstrumentModel ? "active" : ""}`}
+              >
+                <Box size={16} />
+                <span>{showInstrumentModel ? "Hide 3D Profiler" : t.instrumentBtn}</span>
+              </button>
+            </div>
+
+            {/* Optional Floating 3D Argo Profiler Showcase */}
+            {showInstrumentModel && (
+              <div className="hero-instrument-container">
+                <ArgoFloat3D />
+              </div>
+            )}
+          </div>
+
+          <div className="hero-globe-block">
+            {/* Interactive Revolving 3D Ocean Globe */}
+            <OceanGlobe3D onSelectStationQuery={(q) => handleGenerate(q)} />
+          </div>
+        </div>
+      </section>
+
+      {/* 5. INCOIS Operational Core Service Tiles */}
+      <INCOISServiceCards onSelectServiceQuery={(q) => handleGenerate(q)} />
+
+      {/* 6. Main Scientific Workspace Container */}
+      <main ref={workspaceRef} className="gyani-main-container">
+        <div className="workspace-section-banner">
+          <Waves size={20} className="banner-icon" />
+          <div>
+            <h2 className="banner-title">GYANI Scientific Inquiry Workspace</h2>
+            <p className="banner-subtitle">
+              Submit your natural-language questions or inspect 3D temperature depth slices.
+            </p>
+          </div>
+        </div>
+
         <QueryWorkspace
           query={query}
           onQueryChange={setQuery}
@@ -206,6 +303,7 @@ export default function App() {
         )}
       </main>
 
+      {/* 7. Institutional Footer */}
       <footer className="institutional-footer">
         <div className="footer-inner">
           <p className="footer-text">{t.footer}</p>
