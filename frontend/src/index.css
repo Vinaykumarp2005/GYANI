@@ -980,13 +980,43 @@ body {
 .service-card.card-cyan .service-icon-box { background: #cffafe; color: #0891b2; }
 .service-card.card-indigo .service-icon-box { background: #e0e7ff; color: #4f46e5; }
 
+.card-top-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.service-category-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.service-card.card-blue .service-category-badge { background: #e0f2fe; color: #0369a1; }
+.service-card.card-teal .service-category-badge { background: #ccfbf1; color: #0f766e; }
+.service-card.card-red .service-category-badge { background: #fee2e2; color: #b91c1c; }
+.service-card.card-amber .service-category-badge { background: #fef3c7; color: #b45309; }
+.service-card.card-cyan .service-category-badge { background: #cffafe; color: #0e7490; }
+.service-card.card-indigo .service-category-badge { background: #e0e7ff; color: #4338ca; }
+
 .service-ext-link {
   color: var(--text-muted);
-  transition: color 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.15s ease;
 }
 
 .service-ext-link:hover {
   color: var(--incois-blue-accent);
+  background: #f1f5f9;
 }
 
 .service-card-title {
@@ -1004,26 +1034,32 @@ body {
 
 .service-card-footer {
   border-top: 1px dashed var(--card-border);
-  padding-top: 10px;
+  padding-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
 }
 
 .quick-query-btn {
-  background: none;
-  border: none;
+  background: rgba(0, 119, 153, 0.08);
+  border: 1px solid rgba(0, 119, 153, 0.2);
   color: var(--incois-blue-accent);
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   font-weight: 700;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 0;
-  transition: gap 0.15s ease;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  transition: all 0.18s ease;
 }
 
 .quick-query-btn:hover {
-  color: var(--incois-navy-primary);
-  gap: 8px;
+  background: var(--incois-blue-accent);
+  color: #ffffff;
+  border-color: var(--incois-blue-accent);
+  transform: translateX(2px);
 }
 
 /* --------------------------------------------------------------------------

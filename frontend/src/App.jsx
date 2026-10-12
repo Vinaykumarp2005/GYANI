@@ -160,6 +160,10 @@ export default function App() {
     const q = customQuery !== undefined ? customQuery : query;
     if (!q.trim()) return;
 
+    if (customQuery) {
+      setQuery(customQuery);
+    }
+
     setLoading(true);
     setError("");
     setIsPlaying(false);
