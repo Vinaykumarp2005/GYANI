@@ -1,8 +1,15 @@
-import React from "react";
+import React, { useState } from "react";
 import { Globe, Activity, ExternalLink, Compass } from "lucide-react";
+import CompassGyro3D from "../ThreeD/CompassGyro3D";
 
 export default function InstitutionalHeader({ language, onLanguageChange, languages, copy }) {
   const t = copy[language] || copy.en;
+  const [fontSizeOffset, setFontSizeOffset] = useState(0);
+
+  const handleFontSize = (offset) => {
+    setFontSizeOffset(offset);
+    document.documentElement.style.fontSize = offset === 0 ? "100%" : offset > 0 ? "110%" : "90%";
+  };
 
   const officialLinks = [
     { label: "Ocean Observations", url: "https://incois.gov.in/site/datainfo/OON.jsp" },
@@ -14,7 +21,7 @@ export default function InstitutionalHeader({ language, onLanguageChange, langua
 
   return (
     <header className="institutional-header">
-      {/* Top Gov/MoES Banner */}
+      {/* Top Gov/MoES Banner with Accessibility Tools */}
       <div className="gov-topbar">
         <div className="gov-topbar-inner">
           <div className="gov-brand">
@@ -22,11 +29,42 @@ export default function InstitutionalHeader({ language, onLanguageChange, langua
             <span className="gov-sep">·</span>
             <span className="moes-text">पृथ्वी विज्ञान मंत्रालय | Ministry of Earth Sciences</span>
           </div>
+
           <div className="topbar-right">
+            {/* Accessibility Controls */}
+            <div className="accessibility-tools">
+              <span className="access-label">Font:</span>
+              <button
+                type="button"
+                onClick={() => handleFontSize(-1)}
+                className={`access-btn ${fontSizeOffset === -1 ? "active" : ""}`}
+                title="Decrease font size"
+              >
+                A-
+              </button>
+              <button
+                type="button"
+                onClick={() => handleFontSize(0)}
+                className={`access-btn ${fontSizeOffset === 0 ? "active" : ""}`}
+                title="Standard font size"
+              >
+                A
+              </button>
+              <button
+                type="button"
+                onClick={() => handleFontSize(1)}
+                className={`access-btn ${fontSizeOffset === 1 ? "active" : ""}`}
+                title="Increase font size"
+              >
+                A+
+              </button>
+            </div>
+
             <div className="status-badge">
               <span className="status-dot"></span>
               <span className="status-text">INCOIS Services: Online</span>
             </div>
+
             <div className="lang-picker">
               <Globe size={14} className="lang-icon" />
               <label htmlFor="header-lang-select" className="sr-only">Language</label>
@@ -47,13 +85,15 @@ export default function InstitutionalHeader({ language, onLanguageChange, langua
         </div>
       </div>
 
-      {/* Main Institutional Identity Bar */}
+      {/* Main Institutional Identity Bar with Revolving 3D Gyroscope */}
       <div className="header-main">
         <div className="header-main-inner">
           <div className="incois-logo-block">
-            <div className="incois-crest">
-              <Compass size={32} className="crest-icon" />
+            {/* Revolving 3D Marine Compass Gyroscope */}
+            <div className="incois-crest-3d">
+              <CompassGyro3D />
             </div>
+
             <div className="incois-titles">
               <div className="institution-name">
                 भारतीय राष्ट्रीय महासागर सूचना सेवा केंद्र (इन्कोइस)
