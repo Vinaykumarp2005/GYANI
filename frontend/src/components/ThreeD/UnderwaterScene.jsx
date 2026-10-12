@@ -13,16 +13,16 @@ function UnderwaterBoundingBox({ width, length, height, coords }) {
 
   return (
     <group>
-      {/* Wireframe box showing ocean volume extent */}
-      <mesh position={[0, -height / 2, 0]}>
-        <boxGeometry args={[width, height, length]} />
-        <meshBasicMaterial wireframe color="#1e3a5f" transparent opacity={0.35} />
-      </mesh>
+      {/* Clean orthogonal edges showing oceanic volume bounds without diagonal artifacts */}
+      <lineSegments position={[0, -height / 2, 0]}>
+        <edgesGeometry args={[new THREE.BoxGeometry(width, height, length)]} />
+        <lineBasicMaterial color="#0284c7" transparent opacity={0.35} />
+      </lineSegments>
 
       {/* Surface rim highlight */}
       <lineSegments position={[0, 0, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <edgesGeometry args={[new THREE.PlaneGeometry(width, length)]} />
-        <lineBasicMaterial color="#00e5ff" transparent opacity={0.7} />
+        <lineBasicMaterial color="#00e5ff" transparent opacity={0.8} />
       </lineSegments>
 
       {/* Axis annotations */}
@@ -40,8 +40,17 @@ function UnderwaterBoundingBox({ width, length, height, coords }) {
       </Text>
 
       {/* Depth indicators */}
-      <Text position={[-width / 2 - 1.2, 0, length / 2]} fontSize={0.55} color="#38bdf8" anchorX="right">
+      <Text position={[-width / 2 - 1.2, 0, length / 2]} fontSize={0.55} color="#00e5ff" anchorX="right">
         Surface (0m)
+      </Text>
+      <Text position={[-width / 2 - 1.2, -height * 0.25, length / 2]} fontSize={0.48} color="#7dd3fc" anchorX="right">
+        -50m
+      </Text>
+      <Text position={[-width / 2 - 1.2, -height * 0.5, length / 2]} fontSize={0.48} color="#7dd3fc" anchorX="right">
+        -100m
+      </Text>
+      <Text position={[-width / 2 - 1.2, -height * 0.75, length / 2]} fontSize={0.48} color="#7dd3fc" anchorX="right">
+        -150m
       </Text>
       <Text position={[-width / 2 - 1.2, -height, length / 2]} fontSize={0.55} color="#38bdf8" anchorX="right">
         -200m
