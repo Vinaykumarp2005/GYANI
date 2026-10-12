@@ -817,6 +817,22 @@ body {
   font-weight: 700;
 }
 
+.globe-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.globe-live-tag {
+  background: rgba(0, 229, 255, 0.12);
+  border: 1px solid rgba(0, 229, 255, 0.3);
+  color: #00ffcc;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
 .pulse-icon {
   animation: pulse-dot 1.5s infinite;
 }
@@ -841,11 +857,11 @@ body {
   position: absolute;
   bottom: 8px;
   left: 12px;
-  background: rgba(6, 21, 40, 0.8);
-  backdrop-filter: blur(6px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(6, 21, 40, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 6px;
-  padding: 5px 10px;
+  padding: 6px 10px;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -862,6 +878,7 @@ body {
 }
 .buoy-dot.green { background: #00ffcc; box-shadow: 0 0 5px #00ffcc; }
 .buoy-dot.cyan { background: #38bdf8; box-shadow: 0 0 5px #38bdf8; }
+.buoy-dot.red { background: #ef4444; box-shadow: 0 0 5px #ef4444; }
 
 .globe-buoy-tooltip {
   background: rgba(6, 21, 40, 0.95);
