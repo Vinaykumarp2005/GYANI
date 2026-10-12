@@ -1,27 +1,19 @@
 import React, { useState } from "react";
-import { Globe, Activity, ExternalLink, Compass } from "lucide-react";
+import { Globe } from "lucide-react";
 import CompassGyro3D from "../ThreeD/CompassGyro3D";
 
 export default function InstitutionalHeader({ language, onLanguageChange, languages, copy }) {
-  const t = copy[language] || copy.en;
   const [fontSizeOffset, setFontSizeOffset] = useState(0);
 
   const handleFontSize = (offset) => {
     setFontSizeOffset(offset);
-    document.documentElement.style.fontSize = offset === 0 ? "100%" : offset > 0 ? "110%" : "90%";
+    document.documentElement.style.fontSize =
+      offset === 0 ? "100%" : offset > 0 ? "108%" : "92%";
   };
-
-  const officialLinks = [
-    { label: "Ocean Observations", url: "https://incois.gov.in/site/datainfo/OON.jsp" },
-    { label: "Argo Dashboard", url: "https://incois.gov.in/argo" },
-    { label: "ERDDAP Portal", url: "https://erddap.incois.gov.in/" },
-    { label: "Live Access Server", url: "https://las.incois.gov.in/" },
-    { label: "SAMUDRA App", url: "https://incois.gov.in/site/SAMUDRA/index.html" },
-  ];
 
   return (
     <header className="institutional-header">
-      {/* Top Gov/MoES Banner with Accessibility Tools */}
+      {/* 1. Official Government of India & MoES Top Bar */}
       <div className="gov-topbar">
         <div className="gov-topbar-inner">
           <div className="gov-brand">
@@ -31,8 +23,8 @@ export default function InstitutionalHeader({ language, onLanguageChange, langua
           </div>
 
           <div className="topbar-right">
-            {/* Accessibility Controls */}
-            <div className="accessibility-tools">
+            {/* Standard Accessibility Font Sizing Tools */}
+            <div className="accessibility-tools" aria-label="Font size controls">
               <span className="access-label">Font:</span>
               <button
                 type="button"
@@ -60,14 +52,18 @@ export default function InstitutionalHeader({ language, onLanguageChange, langua
               </button>
             </div>
 
-            <div className="status-badge">
+            {/* Live Service Status Indicator */}
+            <div className="status-badge" title="INCOIS Observation & Forecast Servers Online">
               <span className="status-dot"></span>
               <span className="status-text">INCOIS Services: Online</span>
             </div>
 
+            {/* Multilingual Selector */}
             <div className="lang-picker">
-              <Globe size={14} className="lang-icon" />
-              <label htmlFor="header-lang-select" className="sr-only">Language</label>
+              <Globe size={13} className="lang-icon" />
+              <label htmlFor="header-lang-select" className="sr-only">
+                Language
+              </label>
               <select
                 id="header-lang-select"
                 value={language}
@@ -85,58 +81,36 @@ export default function InstitutionalHeader({ language, onLanguageChange, langua
         </div>
       </div>
 
-      {/* Main Institutional Identity Bar with Revolving 3D Gyroscope */}
+      {/* 2. Main Institutional Identity & Revolving 3D Compass Gyroscope */}
       <div className="header-main">
         <div className="header-main-inner">
           <div className="incois-logo-block">
-            {/* Revolving 3D Marine Compass Gyroscope */}
+            {/* Precision 3D Marine Compass Gyroscope Crest */}
             <div className="incois-crest-3d">
               <CompassGyro3D />
             </div>
 
             <div className="incois-titles">
-              <div className="institution-name">
+              <h2 className="institution-name">
                 भारतीय राष्ट्रीय महासागर सूचना सेवा केंद्र (इन्कोइस)
-              </div>
-              <div className="institution-en">
+              </h2>
+              <h1 className="institution-en">
                 INDIAN NATIONAL CENTRE FOR OCEAN INFORMATION SERVICES
-              </div>
-              <div className="institution-sub">
+              </h1>
+              <p className="institution-sub">
                 (An Autonomous Body under the Ministry of Earth Sciences, Govt. of India)
-              </div>
+              </p>
             </div>
           </div>
 
           <div className="project-badge-block">
             <div className="gyani-brand-badge">
               <span className="gyani-acronym">GYANI</span>
-              <span className="gyani-tagline">Scientific Visualization Module</span>
+              <span className="gyani-tagline">Intelligent Scientific Visualizer</span>
             </div>
           </div>
         </div>
       </div>
-
-      {/* Quick Navigation Strip */}
-      <nav className="header-nav-strip">
-        <div className="nav-strip-inner">
-          <span className="nav-label">INCOIS PORTALS:</span>
-          <ul className="nav-links">
-            {officialLinks.map((link) => (
-              <li key={link.label}>
-                <a
-                  href={link.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="nav-link-item"
-                >
-                  {link.label}
-                  <ExternalLink size={11} className="nav-ext-icon" />
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </nav>
     </header>
   );
 }
