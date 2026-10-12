@@ -68,12 +68,28 @@ function ArgoFloatModel() {
 }
 
 export default function ArgoFloat3D({ onClose }) {
+  React.useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape" && onClose) {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
+  const handleBackdropClick = (e) => {
+    if (e.target === e.currentTarget && onClose) {
+      onClose();
+    }
+  };
+
   return (
-    <div className="argo-float-modal-overlay">
-      <div className="argo-float-3d-card">
+    <div className="argo-float-modal-overlay" onClick={handleBackdropClick} role="dialog" aria-modal="true" aria-label="3D Argo Profiler Model">
+      <div className="argo-float-3d-card" onClick={(e) => e.stopPropagation()}>
         <div className="float-card-header">
           <div className="float-header-title">
-            <Anchor size={16} className="header-icon" />
+            <Anchor size={18} className="header-icon" />
             <span>INCOIS Argo Robotic Profiler (Revolving 3D)</span>
           </div>
 
@@ -84,7 +100,7 @@ export default function ArgoFloat3D({ onClose }) {
                 type="button"
                 onClick={onClose}
                 className="modal-close-btn"
-                title="Close 3D Profiler View"
+                title="Close 3D Profiler View (Esc)"
               >
                 <X size={16} />
               </button>
@@ -121,10 +137,15 @@ export default function ArgoFloat3D({ onClose }) {
         </div>
 
         <div className="float-info-bar">
-          <Info size={14} className="info-icon" />
-          <p>
-            Argo floats drift passively at 1,000m, dive to 2,000m depth, and ascend while measuring temperature and salinity, transmitting vertical profiles to INCOIS via satellite.
-          </p>
+          <Info size={16} className="info-icon" />
+          <div>
+            <strong style={{ color: "#f8fafc", display: "block", marginBottom: "2px" }}>
+              10-Day Autonomous Hydrographic Mission Cycle
+            </strong>
+            <p>
+              Argo floats sink to a drift depth of 1,000m for 9-10 days, dive to 2,000m, and record continuous salinity and temperature profiles during ascent before uplinking real-time CTD data to INCOIS via satellite.
+            </p>
+          </div>
         </div>
       </div>
     </div>

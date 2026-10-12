@@ -235,11 +235,9 @@ export default function App() {
               </button>
             </div>
 
-            {/* Optional Floating 3D Argo Profiler Showcase */}
+            {/* Modal Drawer for 3D Argo Profiler */}
             {showInstrumentModel && (
-              <div className="hero-instrument-container">
-                <ArgoFloat3D />
-              </div>
+              <ArgoFloat3D onClose={() => setShowInstrumentModel(false)} />
             )}
           </div>
 
