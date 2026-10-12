@@ -48,9 +48,12 @@ def dataset_metadata(ds):
     return {
         "source": ds.attrs.get("source", "Demo synthetic dataset"),
         "dataset": ds.attrs.get("title", "GYANI Demo Ocean Dataset"),
+        "scientific_classification": ds.attrs.get("scientific_classification", "SYNTHETIC_PROTOTYPE"),
+        "institution": ds.attrs.get("institution", "INCOIS Prototype Demo"),
         "variables": list(ds.data_vars),
         "time_start": str(ds.time.values[0])[:10],
         "time_end": str(ds.time.values[-1])[:10],
         "latitude_range": [float(ds.lat.min()), float(ds.lat.max())],
         "longitude_range": [float(ds.lon.min()), float(ds.lon.max())],
+        "depth_range": [float(ds.depth.min()), float(ds.depth.max())] if "depth" in ds.coords else None,
     }
