@@ -1,10 +1,10 @@
 import React, { useRef, useState, useMemo } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { OrbitControls, Text, Html } from "@react-three/drei";
+import { OrbitControls, Html } from "@react-three/drei";
 import * as THREE from "three";
-import { Radio, Compass, Eye } from "lucide-react";
+import { Radio, RotateCcw, MapPin, Sparkles } from "lucide-react";
 
-// Convert Geographic Coordinates to 3D Cartesian Position on a Sphere of radius R
+// Convert Geographic Coordinates to 3D Cartesian Position on a Sphere
 function latLonToVector3(lat, lon, radius) {
   const phi = (90 - lat) * (Math.PI / 180);
   const theta = (lon + 180) * (Math.PI / 180);
@@ -14,25 +14,32 @@ function latLonToVector3(lat, lon, radius) {
   return new THREE.Vector3(x, y, z);
 }
 
-// Observation Buoy Pin Component
-function BuoyStationPin({ station, onSelect, globeRadius = 3.2 }) {
+// Observation Buoy Pin Component with Pulsing Halo
+function BuoyStationPin({ station, onSelect, globeRadius = 3.25 }) {
   const [hovered, setHovered] = useState(false);
   const pinRef = useRef();
+  const ringRef = useRef();
 
   const pos = useMemo(() => {
     return latLonToVector3(station.lat, station.lon, globeRadius);
   }, [station.lat, station.lon, globeRadius]);
 
   useFrame((state) => {
+    const t = state.clock.elapsedTime * 3 + station.lat;
     if (pinRef.current) {
-      const scale = 1 + Math.sin(state.clock.elapsedTime * 4 + station.lat) * 0.25;
-      pinRef.current.scale.set(scale, scale, scale);
+      const s = 1 + Math.sin(t) * 0.2;
+      pinRef.current.scale.set(s, s, s);
+    }
+    if (ringRef.current) {
+      const ringScale = 1 + ((state.clock.elapsedTime * 1.5 + station.lon) % 2);
+      ringRef.current.scale.set(ringScale, ringScale, ringScale);
+      ringRef.current.material.opacity = Math.max(0, 1 - (ringScale - 1));
     }
   });
 
   return (
     <group position={pos}>
-      {/* Station marker pin */}
+      {/* Station marker sphere */}
       <mesh
         ref={pinRef}
         onPointerOver={(e) => {
@@ -45,22 +52,34 @@ function BuoyStationPin({ station, onSelect, globeRadius = 3.2 }) {
           if (onSelect) onSelect(station);
         }}
       >
-        <sphereGeometry args={[0.09, 16, 16]} />
+        <sphereGeometry args={[0.08, 16, 16]} />
         <meshStandardMaterial
-          color={station.type === "tsunami" ? "#ef4444" : "#00ffcc"}
-          emissive={station.type === "tsunami" ? "#991b1b" : "#00a896"}
-          emissiveIntensity={0.8}
+          color={station.type === "omni" ? "#00ffcc" : "#38bdf8"}
+          emissive={station.type === "omni" ? "#00a896" : "#0284c7"}
+          emissiveIntensity={0.9}
         />
       </mesh>
 
-      {/* Floating HTML label on hover */}
+      {/* Pulsing beacon ring */}
+      <mesh ref={ringRef} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[0.09, 0.13, 16]} />
+        <meshBasicMaterial
+          color="#00ffcc"
+          transparent
+          opacity={0.6}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+
+      {/* Floating tooltip */}
       {hovered && (
-        <Html distanceFactor={8} zIndexRange={[100, 0]}>
+        <Html distanceFactor={7.5} zIndexRange={[120, 0]}>
           <div className="globe-buoy-tooltip">
+            <div className="tooltip-badge">INCOIS BUOY STATION</div>
             <div className="tooltip-title">{station.name}</div>
             <div className="tooltip-coords">{`${station.lat}°N, ${station.lon}°E`}</div>
             <div className="tooltip-desc">{station.desc}</div>
-            <div className="tooltip-click-hint">Click to query this region</div>
+            <div className="tooltip-action">⚡ Click station to explore in 3D</div>
           </div>
         </Html>
       )}
@@ -68,12 +87,11 @@ function BuoyStationPin({ station, onSelect, globeRadius = 3.2 }) {
   );
 }
 
-// Procedural Oceanic Globe Surface with Lat/Lon Grid
+// Procedural Oceanic Globe Core
 function GlobeSphere({ isPaused, onSelectStation }) {
   const globeGroupRef = useRef();
-  const radius = 3.2;
+  const radius = 3.25;
 
-  // Real INCOIS Indian Ocean observation stations
   const stations = [
     {
       id: "ad01",
@@ -81,7 +99,7 @@ function GlobeSphere({ isPaused, onSelectStation }) {
       lat: 15.0,
       lon: 69.0,
       type: "omni",
-      desc: "Moored met-ocean buoy measuring SST, conductivity, and currents",
+      desc: "Moored met-ocean buoy capturing SST, surface salinity, and acoustic current profiler data.",
       query: "Show 3D temperature profile in Arabian Sea June 2025",
     },
     {
@@ -90,7 +108,7 @@ function GlobeSphere({ isPaused, onSelectStation }) {
       lat: 18.0,
       lon: 89.5,
       type: "omni",
-      desc: "Continuous marine monitoring buoy in northern Bay of Bengal",
+      desc: "Deep-sea buoy tracking monsoon circulation and cyclonic storm surges.",
       query: "Show SSH evolution in the Bay of Bengal",
     },
     {
@@ -98,37 +116,43 @@ function GlobeSphere({ isPaused, onSelectStation }) {
       name: "RAMA / Equatorial Mooring",
       lat: 0.0,
       lon: 80.5,
-      type: "rama",
-      desc: "Deep ocean equatorial air-sea interaction buoy",
+      type: "omni",
+      desc: "Air-sea interaction station monitoring equatorial undercurrents and IOD anomalies.",
       query: "Show the current pattern during June 2025",
     },
     {
       id: "lk01",
-      name: "Lakshadweep Sea Hydrographic Station",
+      name: "Lakshadweep Hydrographic Transect",
       lat: 10.0,
       lon: 75.0,
       type: "argo",
-      desc: "Argo float profile & depth transect corridor",
+      desc: "High-resolution vertical thermocline corridor sampled by robotic profiling floats.",
       query: "How did temperature change with depth at 10 N 75 E during June 2025?",
     },
   ];
 
-  // Procedural Canvas Texture for Ocean and Landmasses
   const earthTexture = useMemo(() => {
     const canvas = document.createElement("canvas");
     canvas.width = 2048;
     canvas.height = 1024;
     const ctx = canvas.getContext("2d");
 
-    // Deep ocean base
-    ctx.fillStyle = "#091c34";
+    // Deep oceanic background
+    ctx.fillStyle = "#081b33";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Subtle bathymetric gradient zones
+    const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    grad.addColorStop(0, "rgba(8, 27, 51, 1)");
+    grad.addColorStop(0.5, "rgba(11, 38, 72, 1)");
+    grad.addColorStop(1, "rgba(8, 27, 51, 1)");
+    ctx.fillStyle = grad;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Latitude & Longitude Coordinate Lines
-    ctx.strokeStyle = "rgba(0, 229, 255, 0.18)";
-    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = "rgba(0, 229, 255, 0.15)";
+    ctx.lineWidth = 1.2;
 
-    // Latitudes (every 15 deg)
     for (let lat = -90; lat <= 90; lat += 15) {
       const y = ((90 - lat) / 180) * canvas.height;
       ctx.beginPath();
@@ -137,7 +161,6 @@ function GlobeSphere({ isPaused, onSelectStation }) {
       ctx.stroke();
     }
 
-    // Longitudes (every 15 deg)
     for (let lon = -180; lon <= 180; lon += 15) {
       const x = ((lon + 180) / 360) * canvas.width;
       ctx.beginPath();
@@ -146,26 +169,24 @@ function GlobeSphere({ isPaused, onSelectStation }) {
       ctx.stroke();
     }
 
-    // Equator highlight
-    ctx.strokeStyle = "rgba(0, 229, 255, 0.5)";
-    ctx.lineWidth = 2.5;
+    // Equator line
+    ctx.strokeStyle = "rgba(0, 229, 255, 0.4)";
+    ctx.lineWidth = 2.0;
     ctx.beginPath();
     ctx.moveTo(0, canvas.height / 2);
     ctx.lineTo(canvas.width, canvas.height / 2);
     ctx.stroke();
 
-    // Stylized schematic landmass representation (Indian subcontinent & surrounding margins)
-    ctx.fillStyle = "rgba(16, 50, 85, 0.85)";
-    ctx.strokeStyle = "rgba(56, 189, 248, 0.6)";
-    ctx.lineWidth = 3;
-
-    // Helper to map lat/lon to canvas coordinates
     const toXY = (lat, lon) => [
       ((lon + 180) / 360) * canvas.width,
       ((90 - lat) / 180) * canvas.height,
     ];
 
-    // India triangular peninsula polygon
+    // Landmass rendering (India subcontinent)
+    ctx.fillStyle = "rgba(19, 58, 98, 0.95)";
+    ctx.strokeStyle = "rgba(56, 189, 248, 0.7)";
+    ctx.lineWidth = 2.5;
+
     const indiaPoints = [
       [35, 74], [32, 78], [28, 88], [24, 88], [21, 87], [16, 82], [13, 80],
       [8.1, 77.5], [12, 75], [16, 73], [20, 72.8], [24, 69], [25, 68],
@@ -204,14 +225,14 @@ function GlobeSphere({ isPaused, onSelectStation }) {
     ctx.fill();
     ctx.stroke();
 
-    // Indian Ocean water basin label
+    // Water basin labels
     ctx.font = "bold 26px sans-serif";
-    ctx.fillStyle = "rgba(0, 229, 255, 0.4)";
+    ctx.fillStyle = "rgba(56, 189, 248, 0.5)";
     const [ioX, ioY] = toXY(-10, 75);
-    ctx.fillText("INDIAN OCEAN", ioX - 80, ioY);
+    ctx.fillText("INDIAN OCEAN", ioX - 85, ioY);
 
-    const [asX, asY] = toXY(17, 63);
     ctx.font = "20px sans-serif";
+    const [asX, asY] = toXY(17, 63);
     ctx.fillText("ARABIAN SEA", asX - 60, asY);
 
     const [bobX, bobY] = toXY(15, 90);
@@ -223,7 +244,6 @@ function GlobeSphere({ isPaused, onSelectStation }) {
     return tex;
   }, []);
 
-  // Smooth continuous auto-rotation
   useFrame((state, delta) => {
     if (globeGroupRef.current && !isPaused) {
       globeGroupRef.current.rotation.y += delta * 0.12;
@@ -231,21 +251,21 @@ function GlobeSphere({ isPaused, onSelectStation }) {
   });
 
   return (
-    <group ref={globeGroupRef} rotation={[0.25, -Math.PI / 1.7, 0]}>
+    <group ref={globeGroupRef} rotation={[0.22, -Math.PI / 1.75, 0]}>
       {/* Ocean Globe Core */}
       <mesh>
         <sphereGeometry args={[radius, 64, 64]} />
         <meshStandardMaterial
           map={earthTexture}
-          roughness={0.4}
-          metalness={0.2}
-          emissive="#041224"
+          roughness={0.35}
+          metalness={0.15}
+          emissive="#031022"
           emissiveIntensity={0.6}
         />
       </mesh>
 
       {/* Atmospheric Glow Ring */}
-      <mesh scale={1.025}>
+      <mesh scale={1.028}>
         <sphereGeometry args={[radius, 32, 32]} />
         <meshBasicMaterial
           color="#00e5ff"
@@ -255,7 +275,7 @@ function GlobeSphere({ isPaused, onSelectStation }) {
         />
       </mesh>
 
-      {/* Observation Station Pins */}
+      {/* Buoy Stations */}
       {stations.map((st) => (
         <BuoyStationPin
           key={st.id}
@@ -270,15 +290,28 @@ function GlobeSphere({ isPaused, onSelectStation }) {
 
 export default function OceanGlobe3D({ onSelectStationQuery }) {
   const [isInteracting, setIsInteracting] = useState(false);
+  const controlsRef = useRef();
+
+  const handleReset = () => {
+    if (controlsRef.current) controlsRef.current.reset();
+  };
 
   return (
     <div className="ocean-globe-3d-card">
       <div className="globe-card-header">
         <div className="globe-header-left">
-          <Radio size={15} className="header-icon pulse-icon" />
+          <Radio size={14} className="header-icon pulse-icon" />
           <span className="globe-title">INCOIS Digital Ocean Twin (Revolving 3D)</span>
         </div>
-        <span className="globe-hint">Click buoy to query</span>
+        <button
+          type="button"
+          onClick={handleReset}
+          className="globe-reset-btn"
+          title="Reset globe view"
+        >
+          <RotateCcw size={12} />
+          <span>Reset</span>
+        </button>
       </div>
 
       <div
@@ -287,14 +320,16 @@ export default function OceanGlobe3D({ onSelectStationQuery }) {
         onMouseLeave={() => setIsInteracting(false)}
       >
         <Canvas
-          camera={{ position: [0, 1.5, 7.8], fov: 45 }}
+          camera={{ position: [0, 1.4, 7.6], fov: 46 }}
           gl={{ antialias: true, alpha: true }}
+          dpr={[1, 2]}
         >
           <ambientLight intensity={1.1} />
           <directionalLight position={[10, 12, 10]} intensity={1.8} color="#ffffff" />
           <directionalLight position={[-8, -5, -6]} intensity={0.5} color="#007799" />
 
           <OrbitControls
+            ref={controlsRef}
             enableDamping
             dampingFactor={0.06}
             minDistance={4.5}
@@ -313,11 +348,11 @@ export default function OceanGlobe3D({ onSelectStationQuery }) {
         <div className="globe-legend-overlay">
           <div className="legend-item">
             <span className="buoy-dot green"></span>
-            <span>OMNI Buoy Stations</span>
+            <span>OMNI Moored Buoys</span>
           </div>
           <div className="legend-item">
             <span className="buoy-dot cyan"></span>
-            <span>Argo Transect Corridor</span>
+            <span>Argo Hydrographic Corridor</span>
           </div>
         </div>
       </div>
