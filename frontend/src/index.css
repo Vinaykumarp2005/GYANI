@@ -1863,11 +1863,18 @@ body {
 .metric-cell {
   background: #f8fafc;
   border: 1px solid #e2e8f0;
-  padding: 10px 12px;
-  border-radius: 6px;
+  padding: 10px 14px;
+  border-radius: 8px;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
+  transition: all 0.15s ease;
+}
+
+.metric-cell:hover {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .metric-label {
@@ -1936,7 +1943,7 @@ body {
 .institutional-footer {
   background: var(--incois-navy-dark);
   color: #94a3b8;
-  padding: 24px 20px;
+  padding: 28px 20px;
   border-top: 3px solid var(--incois-gold);
   font-size: 0.78rem;
 }
@@ -1948,11 +1955,25 @@ body {
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 16px;
+}
+
+.footer-left-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 820px;
+}
+
+.footer-org {
+  color: #f1f5f9;
+  font-weight: 700;
+  font-size: 0.84rem;
 }
 
 .footer-text {
-  max-width: 800px;
+  line-height: 1.5;
+  color: #94a3b8;
 }
 
 .footer-links {
@@ -1964,10 +1985,11 @@ body {
 .footer-links a {
   color: #cbd5e1;
   text-decoration: none;
+  transition: color 0.15s ease;
 }
 
 .footer-links a:hover {
-  color: #ffffff;
+  color: var(--incois-gold);
 }
 
 .footer-links .dot {

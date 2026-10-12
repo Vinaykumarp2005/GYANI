@@ -308,7 +308,12 @@ export default function App() {
       {/* 7. Institutional Footer */}
       <footer className="institutional-footer">
         <div className="footer-inner">
-          <p className="footer-text">{t.footer}</p>
+          <div className="footer-left-block">
+            <p className="footer-org">
+              भारतीय राष्ट्रीय महासागर सूचना सेवा केंद्र (इन्कोइस) · Indian National Centre for Ocean Information Services
+            </p>
+            <p className="footer-text">{t.footer}</p>
+          </div>
           <div className="footer-links">
             <a href="https://incois.gov.in/site/disclaimer.jsp" target="_blank" rel="noreferrer">
               Disclaimer
