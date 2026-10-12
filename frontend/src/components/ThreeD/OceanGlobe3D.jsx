@@ -137,23 +137,22 @@ function GlobeSphere({ isPaused, onSelectStation }) {
     canvas.height = 1024;
     const ctx = canvas.getContext("2d");
 
-    // Deep oceanic background
-    ctx.fillStyle = "#081b33";
+    // Deep oceanic background with radial depth
+    const oceanGrad = ctx.createRadialGradient(
+      canvas.width * 0.72, canvas.height * 0.45, 50,
+      canvas.width * 0.72, canvas.height * 0.45, 900
+    );
+    oceanGrad.addColorStop(0, "#082548");
+    oceanGrad.addColorStop(0.5, "#061a33");
+    oceanGrad.addColorStop(1, "#030e1d");
+    ctx.fillStyle = oceanGrad;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Subtle bathymetric gradient zones
-    const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
-    grad.addColorStop(0, "rgba(8, 27, 51, 1)");
-    grad.addColorStop(0.5, "rgba(11, 38, 72, 1)");
-    grad.addColorStop(1, "rgba(8, 27, 51, 1)");
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // Latitude & Longitude Coordinate Lines (Graticule)
+    ctx.strokeStyle = "rgba(0, 229, 255, 0.12)";
+    ctx.lineWidth = 1;
 
-    // Latitude & Longitude Coordinate Lines
-    ctx.strokeStyle = "rgba(0, 229, 255, 0.15)";
-    ctx.lineWidth = 1.2;
-
-    for (let lat = -90; lat <= 90; lat += 15) {
+    for (let lat = -80; lat <= 80; lat += 20) {
       const y = ((90 - lat) / 180) * canvas.height;
       ctx.beginPath();
       ctx.moveTo(0, y);
@@ -161,7 +160,7 @@ function GlobeSphere({ isPaused, onSelectStation }) {
       ctx.stroke();
     }
 
-    for (let lon = -180; lon <= 180; lon += 15) {
+    for (let lon = -180; lon <= 180; lon += 20) {
       const x = ((lon + 180) / 360) * canvas.width;
       ctx.beginPath();
       ctx.moveTo(x, 0);
@@ -169,9 +168,9 @@ function GlobeSphere({ isPaused, onSelectStation }) {
       ctx.stroke();
     }
 
-    // Equator line
-    ctx.strokeStyle = "rgba(0, 229, 255, 0.4)";
-    ctx.lineWidth = 2.0;
+    // Equator Line (Prominent)
+    ctx.strokeStyle = "rgba(0, 229, 255, 0.35)";
+    ctx.lineWidth = 1.8;
     ctx.beginPath();
     ctx.moveTo(0, canvas.height / 2);
     ctx.lineTo(canvas.width, canvas.height / 2);
@@ -182,61 +181,119 @@ function GlobeSphere({ isPaused, onSelectStation }) {
       ((90 - lat) / 180) * canvas.height,
     ];
 
-    // Landmass rendering (India subcontinent)
-    ctx.fillStyle = "rgba(19, 58, 98, 0.95)";
-    ctx.strokeStyle = "rgba(56, 189, 248, 0.7)";
-    ctx.lineWidth = 2.5;
+    // Helper to draw continent polygons
+    const drawPolygon = (points, fillColor, strokeColor, strokeWidth = 2) => {
+      ctx.beginPath();
+      points.forEach(([lat, lon], idx) => {
+        const [x, y] = toXY(lat, lon);
+        if (idx === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.closePath();
+      ctx.fillStyle = fillColor;
+      ctx.fill();
+      ctx.strokeStyle = strokeColor;
+      ctx.lineWidth = strokeWidth;
+      ctx.stroke();
+    };
 
-    const indiaPoints = [
-      [35, 74], [32, 78], [28, 88], [24, 88], [21, 87], [16, 82], [13, 80],
-      [8.1, 77.5], [12, 75], [16, 73], [20, 72.8], [24, 69], [25, 68],
-      [30, 70], [35, 74]
+    // 1. African Continent & Madagascar
+    const africaPoints = [
+      [37, 10], [30, 32], [22, 38], [12, 44], [12, 51], [2, 45],
+      [-5, 40], [-15, 40], [-25, 34], [-34, 18], [-33, 26], [-28, 32],
+      [-20, 35], [-12, 43], [0, 42], [10, 42], [15, 39], [22, 36],
+      [31, 32], [37, 10]
     ];
+    drawPolygon(africaPoints, "#0c3154", "#00bcd4", 2);
 
-    ctx.beginPath();
-    indiaPoints.forEach(([lat, lon], idx) => {
-      const [x, y] = toXY(lat, lon);
-      if (idx === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
-    });
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
+    // Madagascar
+    const madagascarPoints = [
+      [-12, 49], [-16, 50], [-25, 47], [-25, 44], [-16, 44], [-12, 49]
+    ];
+    drawPolygon(madagascarPoints, "#0c3154", "#00bcd4", 1.5);
+
+    // 2. Arabian Peninsula
+    const arabiaPoints = [
+      [30, 35], [30, 48], [26, 51], [24, 56], [22, 59], [17, 54],
+      [13, 48], [12, 44], [16, 42], [22, 39], [28, 35], [30, 35]
+    ];
+    drawPolygon(arabiaPoints, "#0c3154", "#00bcd4", 2);
+
+    // 3. Indian Subcontinent (High visual prominence with Gold border)
+    const indiaPoints = [
+      [35, 74], [34, 77], [30, 81], [27, 88], [24, 89], [22, 89],
+      [21.5, 87], [18, 84], [16, 82], [13, 80.3], [10, 79.8],
+      [8.08, 77.55], [9.5, 76.3], [12.5, 75], [15.5, 73.8], [19, 72.8],
+      [21, 72.6], [23, 68.5], [24.5, 68.5], [25, 70], [30, 71],
+      [33, 72], [35, 74]
+    ];
+    drawPolygon(indiaPoints, "#103c68", "#facc15", 3);
 
     // Sri Lanka
-    const [slX, slY] = toXY(7.5, 80.5);
+    const [slX, slY] = toXY(7.5, 80.7);
     ctx.beginPath();
-    ctx.ellipse(slX, slY, 18, 28, 0.2, 0, Math.PI * 2);
+    ctx.ellipse(slX, slY, 12, 18, 0.15, 0, Math.PI * 2);
+    ctx.fillStyle = "#103c68";
     ctx.fill();
+    ctx.strokeStyle = "#facc15";
+    ctx.lineWidth = 2;
     ctx.stroke();
 
-    // Arabian Peninsula
-    const arabiaPoints = [
-      [30, 35], [30, 48], [24, 56], [22, 59], [17, 54], [13, 45],
-      [13, 43], [20, 39], [30, 35]
+    // 4. Southeast Asia & Sunda Shelf (Sumatra, Java, Malay Peninsula)
+    const seAsiaPoints = [
+      [23, 89], [22, 92], [16, 96], [10, 99], [3, 101], [1.3, 104],
+      [6, 103], [12, 101], [18, 105], [22, 106], [24, 98], [23, 89]
     ];
+    drawPolygon(seAsiaPoints, "#0c3154", "#00bcd4", 2);
+
+    // Sumatra
+    const sumatraPoints = [
+      [5.5, 95.3], [2.5, 99], [-2, 103], [-5.5, 105.5], [-5, 104], [-2, 100], [2, 96], [5.5, 95.3]
+    ];
+    drawPolygon(sumatraPoints, "#0c3154", "#00bcd4", 1.8);
+
+    // 5. Australia (Northwest Shelf)
+    const ausPoints = [
+      [-12, 131], [-15, 124], [-20, 119], [-22, 114], [-26, 113],
+      [-32, 116], [-35, 118], [-35, 138], [-28, 138], [-12, 131]
+    ];
+    drawPolygon(ausPoints, "#0c3154", "#00bcd4", 2);
+
+    // 6. Ocean Basin Typography
+    ctx.font = "bold 28px -apple-system, BlinkMacSystemFont, sans-serif";
+    ctx.fillStyle = "rgba(0, 229, 255, 0.6)";
+    const [ioX, ioY] = toXY(-8, 77);
+    ctx.fillText("INDIAN OCEAN", ioX - 95, ioY);
+
+    ctx.font = "bold 20px -apple-system, BlinkMacSystemFont, sans-serif";
+    ctx.fillStyle = "rgba(56, 189, 248, 0.75)";
+    const [asX, asY] = toXY(16, 64);
+    ctx.fillText("ARABIAN SEA", asX - 65, asY);
+
+    const [bobX, bobY] = toXY(15, 89);
+    ctx.fillText("BAY OF BENGAL", bobX - 70, bobY);
+
+    // 7. Dynamic Ocean Current Arcs (Somali Current & Monsoon Drift)
+    ctx.strokeStyle = "rgba(250, 204, 21, 0.4)";
+    ctx.lineWidth = 2.5;
+    ctx.setLineDash([8, 8]);
+    
+    // Somali Current
     ctx.beginPath();
-    arabiaPoints.forEach(([lat, lon], idx) => {
-      const [x, y] = toXY(lat, lon);
-      if (idx === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
-    });
-    ctx.closePath();
-    ctx.fill();
+    const [sc1X, sc1Y] = toXY(-5, 42);
+    const [sc2X, sc2Y] = toXY(12, 53);
+    ctx.moveTo(sc1X, sc1Y);
+    ctx.quadraticCurveTo(sc1X + 40, sc1Y - 60, sc2X, sc2Y);
     ctx.stroke();
 
-    // Water basin labels
-    ctx.font = "bold 26px sans-serif";
-    ctx.fillStyle = "rgba(56, 189, 248, 0.5)";
-    const [ioX, ioY] = toXY(-10, 75);
-    ctx.fillText("INDIAN OCEAN", ioX - 85, ioY);
-
-    ctx.font = "20px sans-serif";
-    const [asX, asY] = toXY(17, 63);
-    ctx.fillText("ARABIAN SEA", asX - 60, asY);
-
-    const [bobX, bobY] = toXY(15, 90);
-    ctx.fillText("BAY OF BENGAL", bobX - 65, bobY);
+    // Southwest Monsoon Current
+    ctx.beginPath();
+    const [mc1X, mc1Y] = toXY(6, 68);
+    const [mc2X, mc2Y] = toXY(6, 92);
+    ctx.moveTo(mc1X, mc1Y);
+    ctx.lineTo(mc2X, mc2Y);
+    ctx.stroke();
+    ctx.setLineDash([]); // Reset line dash
 
     const tex = new THREE.CanvasTexture(canvas);
     tex.wrapS = THREE.RepeatWrapping;
@@ -251,16 +308,14 @@ function GlobeSphere({ isPaused, onSelectStation }) {
   });
 
   return (
-    <group ref={globeGroupRef} rotation={[0.22, -Math.PI / 1.75, 0]}>
+    <group ref={globeGroupRef} rotation={[0.28, -Math.PI / 1.35, 0]}>
       {/* Ocean Globe Core */}
       <mesh>
         <sphereGeometry args={[radius, 64, 64]} />
         <meshStandardMaterial
           map={earthTexture}
-          roughness={0.35}
-          metalness={0.15}
-          emissive="#031022"
-          emissiveIntensity={0.6}
+          roughness={0.25}
+          metalness={0.1}
         />
       </mesh>
 
