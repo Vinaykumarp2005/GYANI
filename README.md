@@ -149,12 +149,26 @@ graph TD
    - For Conceptual queries: Produces an annotated scientific schematic diagram explaining the ocean phenomenon.
 6. **Client Visualization & Inspection**: React renders the polymorphic output, updates the interactive timeline controls, and populates the metadata/provenance panel.
 
-## Requirements
+## Quick Start (Single Command)
 
-- Python 3.10+
-- Node.js 18+
+To run the entire system (backend API, virtual environment, and frontend UI) with a single command:
 
-## 1. Start backend
+```bash
+python run.py
+```
+
+This cross-platform runner automatically:
+1. Detects or creates the Python `.venv` and installs backend dependencies.
+2. Generates the sample oceanographic NetCDF dataset if missing.
+3. Installs frontend dependencies (`npm install`) if missing.
+4. Concurrently starts the FastAPI backend (`:8000`) and the Vite React frontend (`:5173`).
+5. Shuts down all processes cleanly when you press `Ctrl+C`.
+
+---
+
+## Manual Setup & Individual Services
+
+### 1. Start backend
 
 ```bash
 cd backend
