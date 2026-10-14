@@ -26,6 +26,8 @@ def static_map(da, variable):
     title, unit = _name(variable)
     if "time" in da.dims:
         da = da.isel(time=0)
+    if "depth" in da.dims:
+        da = da.isel(depth=0)
 
     fig, ax = plt.subplots(figsize=(10, 6))
     mesh = ax.pcolormesh(da.lon, da.lat, da, shading="auto")
@@ -100,6 +102,9 @@ def depth_time(da, variable):
 
 def animated_map(da, variable):
     title, unit = _name(variable)
+
+    if "depth" in da.dims:
+        da = da.isel(depth=0)
 
     if "time" not in da.dims:
         da = da.expand_dims(time=[0])

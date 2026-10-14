@@ -129,6 +129,15 @@ def fallback_classify_query(query: str, language: str = "en") -> GeminiClassific
     )
 
 
+CANDIDATE_MODELS = [
+    "gemini-3.5-flash-lite",
+    "gemini-flash-lite-latest",
+    "gemini-3.1-flash-lite",
+    "gemini-3.8-flash",
+    "gemini-2.5-flash"
+]
+
+
 # --------------------------------------------------------------------------
 # 2. Gemini Live Query Classifier
 # --------------------------------------------------------------------------
@@ -152,24 +161,51 @@ def classify_query(query: str, language: str = "en") -> GeminiClassification:
         "Respond strictly in structured JSON matching the schema."
     )
 
-    prompt = f"User Query: {query}\nPreferred Language: {language}"
+    prompt = (
+        f"User Query: {query}\n"
+        f"Preferred Language: {language}\n\n"
+        "Respond ONLY with a JSON object in this exact structure:\n"
+        "{\n"
+        '  "category": "TEXT" | "2D_VISUALIZATION" | "3D_VISUALIZATION" | "IMAGE_GENERATION",\n'
+        '  "reason": "Clear explanation of why this category was chosen",\n'
+        '  "parameters": {"variable": "...", "region": "...", "dimensions": [...]},\n'
+        '  "requires_scientific_data": true | false,\n'
+        '  "requires_clarification": false\n'
+        "}"
+    )
 
-    try:
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=prompt,
-            config=dict(
-                system_instruction=system_instruction,
-                response_mime_type="application/json",
-                response_schema=GeminiClassification,
-                temperature=0.1
-            ),
-        )
-        if response.text:
-            data = json.loads(response.text)
-            return GeminiClassification(**data)
-    except Exception as e:
-        print(f"[GYANI Gemini Classifier Warning] Error with live Gemini call ({e}). Falling back to local classifier.")
+    for model_name in CANDIDATE_MODELS:
+        try:
+            response = client.models.generate_content(
+                model=model_name,
+                contents=prompt,
+                config=dict(
+                    system_instruction=system_instruction,
+                    response_mime_type="application/json",
+                    temperature=0.1
+                ),
+            )
+            if response.text:
+                data = json.loads(response.text)
+                cat = data.get("category", "TEXT")
+                reason = data.get("reason") or data.get("explanation") or f"Identified as {cat} query based on intent analysis."
+                params = data.get("parameters")
+                if not isinstance(params, dict):
+                    params = {k: v for k, v in data.items() if k not in ["category", "reason", "explanation", "requires_scientific_data", "requires_clarification"]}
+                req_data = data.get("requires_scientific_data", cat in ["2D_VISUALIZATION", "3D_VISUALIZATION"])
+                req_clar = bool(data.get("requires_clarification", False))
+
+                return GeminiClassification(
+                    category=cat,
+                    reason=reason,
+                    parameters=params,
+                    requires_scientific_data=req_data,
+                    requires_clarification=req_clar
+                )
+        except Exception as e:
+            # Try next model if model is deprecated (404) or busy (503)
+            print(f"[GYANI Gemini Classifier] Notice with {model_name}: {e}. Trying fallback model...")
+            continue
 
     return fallback_classify_query(query, language)
 
@@ -191,19 +227,21 @@ def generate_text_answer(query: str, classification: GeminiClassification, langu
             "Format in clear markdown with clean headings, bold highlights, and bullet points. "
             f"Respond in language code '{language}' if requested, defaulting to English."
         )
-        try:
-            resp = client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=query,
-                config=dict(
-                    system_instruction=system_prompt,
-                    temperature=0.3
+        for model_name in CANDIDATE_MODELS:
+            try:
+                resp = client.models.generate_content(
+                    model=model_name,
+                    contents=query,
+                    config=dict(
+                        system_instruction=system_prompt,
+                        temperature=0.3
+                    )
                 )
-            )
-            if resp.text:
-                return resp.text
-        except Exception as e:
-            print(f"[GYANI Gemini Text Warning] Error generating live answer ({e}). Falling back to internal knowledge.")
+                if resp.text:
+                    return resp.text
+            except Exception as e:
+                print(f"[GYANI Gemini Text] Notice with {model_name}: {e}. Trying fallback model...")
+                continue
 
     # High-quality fallback answers for standard oceanographic concepts
     ql = query.lower()
