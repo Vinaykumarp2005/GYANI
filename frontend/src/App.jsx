@@ -253,7 +253,7 @@ export default function App() {
       </section>
 
       {/* 5. INCOIS Operational Core Service Tiles */}
-      <INCOISServiceCards onSelectServiceQuery={(q) => handleGenerate(q)} />
+      <INCOISServiceCards />
 
       {/* 6. Main Scientific Workspace Container */}
       <main ref={workspaceRef} className="gyani-main-container">

@@ -1,7 +1,7 @@
 import React from "react";
-import { Waves, Fish, ShieldAlert, Cpu, Smartphone, Wind, ExternalLink, ArrowRight } from "lucide-react";
+import { Waves, Fish, ShieldAlert, Cpu, Smartphone, Wind, ExternalLink } from "lucide-react";
 
-export default function INCOISServiceCards({ onSelectServiceQuery }) {
+export default function INCOISServiceCards() {
   const services = [
     {
       id: "osf",
@@ -11,7 +11,6 @@ export default function INCOISServiceCards({ onSelectServiceQuery }) {
       theme: "card-blue",
       desc: "7-day forecasts of wave heights, swell direction, sea surface temperature, and ocean currents for navigation and coastal safety.",
       url: "https://incois.gov.in/site/forecast.jsp",
-      sampleQuery: "Show the current pattern during June 2025",
     },
     {
       id: "pfz",
@@ -21,7 +20,6 @@ export default function INCOISServiceCards({ onSelectServiceQuery }) {
       theme: "card-teal",
       desc: "Multi-satellite thermal and chlorophyll front advisories guiding artisanal and mechanized fishermen to productive fishing grounds.",
       url: "https://incois.gov.in/site/ecosystem.jsp",
-      sampleQuery: "Show SST evolution in the Arabian Sea during June 2025",
     },
     {
       id: "tews",
@@ -31,7 +29,6 @@ export default function INCOISServiceCards({ onSelectServiceQuery }) {
       theme: "card-red",
       desc: "Continuous real-time seismic monitoring, coastal tide gauge network, and deep-ocean bottom pressure recorders (BPR) covering the Indian Ocean rim.",
       url: "https://tsunami.incois.gov.in/TEWS/",
-      sampleQuery: "Show SSH evolution in the Bay of Bengal",
     },
     {
       id: "argo",
@@ -41,7 +38,6 @@ export default function INCOISServiceCards({ onSelectServiceQuery }) {
       theme: "card-amber",
       desc: "Global network of robotic profiling floats measuring vertical temperature and salinity distributions down to 2,000m depth.",
       url: "https://incois.gov.in/argo",
-      sampleQuery: "Show 3D temperature profile in Arabian Sea June 2025",
     },
     {
       id: "hwa",
@@ -51,7 +47,6 @@ export default function INCOISServiceCards({ onSelectServiceQuery }) {
       theme: "card-cyan",
       desc: "Early warning bulletins for coastal erosion, swell surges (Kallakkadal), and storm surges during monsoon and cyclonic events.",
       url: "https://incois.gov.in/site/services/hwa.jsp",
-      sampleQuery: "What is coastal upwelling?",
     },
     {
       id: "samudra",
@@ -61,7 +56,6 @@ export default function INCOISServiceCards({ onSelectServiceQuery }) {
       theme: "card-indigo",
       desc: "Smart Access to Marine Users for ocean Data Resources and Advisories with real-time GIS mapping in regional Indian languages.",
       url: "https://incois.gov.in/site/SAMUDRA/index.html",
-      sampleQuery: "Show 3D temperature profile in Arabian Sea June 2025",
     },
   ];
 
@@ -103,17 +97,6 @@ export default function INCOISServiceCards({ onSelectServiceQuery }) {
               <h3 className="service-card-title">{srv.title}</h3>
               <p className="service-card-desc">{srv.desc}</p>
 
-              <div className="service-card-footer">
-                <button
-                  type="button"
-                  onClick={() => onSelectServiceQuery(srv.sampleQuery)}
-                  className="quick-query-btn"
-                  title={`Run sample query for ${srv.title}`}
-                >
-                  <span>Explore in GYANI</span>
-                  <ArrowRight size={13} className="arrow-icon" />
-                </button>
-              </div>
             </div>
           );
         })}

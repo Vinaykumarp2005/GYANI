@@ -1064,36 +1064,6 @@ body {
   flex: 1;
 }
 
-.service-card-footer {
-  border-top: 1px dashed var(--card-border);
-  padding-top: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-}
-
-.quick-query-btn {
-  background: rgba(0, 119, 153, 0.08);
-  border: 1px solid rgba(0, 119, 153, 0.2);
-  color: var(--incois-blue-accent);
-  font-size: 0.76rem;
-  font-weight: 700;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border-radius: 6px;
-  transition: all 0.18s ease;
-}
-
-.quick-query-btn:hover {
-  background: var(--incois-blue-accent);
-  color: #ffffff;
-  border-color: var(--incois-blue-accent);
-  transform: translateX(2px);
-}
-
 /* --------------------------------------------------------------------------
    Main Workspace Container
    -------------------------------------------------------------------------- */
