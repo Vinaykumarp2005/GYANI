@@ -8,6 +8,8 @@ import INCOISServiceCards from "./components/Home/INCOISServiceCards";
 import QueryWorkspace from "./components/Workspace/QueryWorkspace";
 import VisualizationViewport from "./components/Viewport/VisualizationViewport";
 import ScientificMetadataPanel from "./components/Metadata/ScientificMetadataPanel";
+import ErrorBoundary from "./components/Common/ErrorBoundary";
+import HistoryPanel from "./components/History/HistoryPanel";
 import { AlertCircle, Box, Compass, Sparkles, ChevronRight, Waves, Layers } from "lucide-react";
 
 const API = "http://localhost:8000";
@@ -125,13 +127,35 @@ const examples = {
   ],
 };
 
+function getSessionId() {
+  try {
+    let sid = sessionStorage.getItem("gyani_session_id");
+    if (!sid) {
+      sid = "sess_" + Math.random().toString(36).substring(2, 9) + "_" + Date.now();
+      sessionStorage.setItem("gyani_session_id", sid);
+    }
+    return sid;
+  } catch {
+    return "sess_default_" + Date.now();
+  }
+}
+
 export default function App() {
+  const [sessionId] = useState(getSessionId);
   const [language, setLanguage] = useState("en");
   const [query, setQuery] = useState(examples.en[0]);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState("");
   const [showInstrumentModel, setShowInstrumentModel] = useState(false);
+
+  // Multimodal background generation states
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [isGeneratingAnswer, setIsGeneratingAnswer] = useState(false);
+
+  // History drawer state
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [historyRefreshToken, setHistoryRefreshToken] = useState(0);
 
   // Temporal animation state
   const [timeIndex, setTimeIndex] = useState(0);
@@ -173,12 +197,28 @@ export default function App() {
       const response = await fetch(`${API}/api/visualize`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: q, language }),
+        body: JSON.stringify({
+          query: q,
+          language,
+          session_id: sessionId,
+        }),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.detail || t.error);
+      if (!response.ok) throw new Error(data.detail || data.error || t.error);
+      data.user_query = q;
       setResult(data);
       scrollToWorkspace();
+
+      // Refresh history list
+      setHistoryRefreshToken((prev) => prev + 1);
+
+      // Concurrently enrich with Gemini structured text answer for AI Synthesis tab
+      fetchAnswerInBackground(q);
+
+      // If classified as image intent, also trigger generative image pipeline
+      if (data.intent?.primary_modality === "image") {
+        fetchImageInBackground(q);
+      }
     } catch (e) {
       setError(e.message);
     } finally {
@@ -186,9 +226,105 @@ export default function App() {
     }
   }
 
+  const fetchAnswerInBackground = async (q) => {
+    setIsGeneratingAnswer(true);
+    try {
+      const res = await fetch(`${API}/api/answer`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: q, session_id: sessionId }),
+      });
+      const ans = await res.json();
+      if (ans?.text) {
+        setResult((prev) => (prev ? { ...prev, text_answer: ans.text } : prev));
+        setHistoryRefreshToken((prev) => prev + 1);
+      }
+    } catch (err) {
+      console.warn("Background text answer fetch error:", err);
+    } finally {
+      setIsGeneratingAnswer(false);
+    }
+  };
+
+  const fetchImageInBackground = async (q) => {
+    setIsGeneratingImage(true);
+    try {
+      const res = await fetch(`${API}/api/generate-image`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: q, session_id: sessionId }),
+      });
+      const img = await res.json();
+      if (img) {
+        setResult((prev) => (prev ? { ...prev, image_data: img } : prev));
+        setHistoryRefreshToken((prev) => prev + 1);
+      }
+    } catch (err) {
+      console.warn("Background image generation fetch error:", err);
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  };
+
+  const handleRequestGenerateImage = () => {
+    fetchImageInBackground(result?.user_query || result?.query || query);
+  };
+
+  const handleRequestAnswer = () => {
+    fetchAnswerInBackground(result?.user_query || result?.query || query);
+  };
+
   const handleSelectExample = (ex) => {
     setQuery(ex);
     handleGenerate(ex);
+  };
+
+  const handleSelectHistoryRecord = (record) => {
+    setQuery(record.user_query);
+    setError("");
+    setHistoryOpen(false);
+
+    const is3D =
+      record.primary_modality === "3d" ||
+      record.visualization_type === "3d_depth_layers";
+
+    // If it's 3D and lacks the 3D grid data, regenerate live
+    if (is3D || (!record.media_url && !record.text_response)) {
+      handleGenerate(record.user_query);
+    } else {
+      setResult({
+        success: true,
+        category:
+          record.intent?.category ||
+          (record.visualization_type === "conceptual_diagram"
+            ? "conceptual"
+            : "data"),
+        is_3d: is3D,
+        intent: record.intent || {
+          visualization: record.visualization_type,
+          primary_modality: record.primary_modality,
+          modality_reasoning: record.modality_reasoning,
+        },
+        primary_modality: record.primary_modality,
+        modality_reasoning: record.modality_reasoning,
+        text_answer: record.text_response,
+        explanation: record.text_response || `History inquiry: ${record.user_query}`,
+        visualization: record.media_url
+          ? {
+              url: record.media_url,
+              media_type: record.media_url.endsWith(".mp4")
+                ? "video/mp4"
+                : "image/png",
+            }
+          : null,
+        image_data:
+          record.primary_modality === "image" && record.media_url
+            ? { url: record.media_url }
+            : null,
+        metadata: record.metadata || {},
+      });
+      scrollToWorkspace();
+    }
   };
 
   return (
@@ -199,6 +335,7 @@ export default function App() {
         onLanguageChange={changeLanguage}
         languages={languages}
         copy={copy}
+        onOpenHistory={() => setHistoryOpen(true)}
       />
 
       {/* 2. Primary Navigation Ribbon (INCOIS Style) */}
@@ -275,6 +412,7 @@ export default function App() {
           examples={currentExamples}
           t={t}
           onSelectExample={handleSelectExample}
+          onOpenHistory={() => setHistoryOpen(true)}
         />
 
         {error && (
@@ -288,24 +426,47 @@ export default function App() {
 
         {result && (
           <div className="results-layout-flow">
-            <VisualizationViewport
-              result={result}
-              apiBase={API}
-              timeIndex={timeIndex}
-              onTimeChange={setTimeIndex}
-              isPlaying={isPlaying}
-              onTogglePlay={() => setIsPlaying(!isPlaying)}
-              playbackSpeed={playbackSpeed}
-              onChangeSpeed={setPlaybackSpeed}
-              t={t}
-            />
+            <ErrorBoundary
+              fallbackTitle="Rendering Engine Safeguard"
+              fallbackText={
+                result.text_answer ||
+                result.explanation ||
+                "A visual rendering exception occurred. The oceanographic dataset metadata is preserved below."
+              }
+              onReset={() => handleGenerate()}
+            >
+              <VisualizationViewport
+                result={result}
+                apiBase={API}
+                timeIndex={timeIndex}
+                onTimeChange={setTimeIndex}
+                isPlaying={isPlaying}
+                onTogglePlay={() => setIsPlaying(!isPlaying)}
+                playbackSpeed={playbackSpeed}
+                onChangeSpeed={setPlaybackSpeed}
+                t={t}
+                onRequestGenerateImage={handleRequestGenerateImage}
+                isGeneratingImage={isGeneratingImage}
+                onRequestAnswer={handleRequestAnswer}
+                isGeneratingAnswer={isGeneratingAnswer}
+              />
+            </ErrorBoundary>
 
             <ScientificMetadataPanel result={result} />
           </div>
         )}
       </main>
 
-      {/* 7. Institutional Footer */}
+      {/* 7. Query History Drawer */}
+      <HistoryPanel
+        isOpen={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+        sessionId={sessionId}
+        onSelectRecord={handleSelectHistoryRecord}
+        refreshToken={historyRefreshToken}
+      />
+
+      {/* 8. Institutional Footer */}
       <footer className="institutional-footer">
         <div className="footer-inner">
           <div className="footer-left-block">

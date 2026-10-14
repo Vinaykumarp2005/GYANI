@@ -1,8 +1,14 @@
 import React, { useState } from "react";
-import { Globe } from "lucide-react";
+import { Globe, History } from "lucide-react";
 import logo from "../../assets/logo.png";
 
-export default function InstitutionalHeader({ language, onLanguageChange, languages, copy }) {
+export default function InstitutionalHeader({
+  language,
+  onLanguageChange,
+  languages,
+  copy,
+  onOpenHistory,
+}) {
   const [fontSizeOffset, setFontSizeOffset] = useState(0);
 
   const handleFontSize = (offset) => {
@@ -51,6 +57,19 @@ export default function InstitutionalHeader({ language, onLanguageChange, langua
                 A+
               </button>
             </div>
+
+            {/* Query History Drawer Trigger */}
+            {onOpenHistory && (
+              <button
+                type="button"
+                onClick={onOpenHistory}
+                className="header-history-btn"
+                title="Open Query History"
+              >
+                <History size={13} />
+                <span>History</span>
+              </button>
+            )}
 
             {/* Live Service Status Indicator */}
             <div className="status-badge" title="INCOIS Observation & Forecast Servers Online">

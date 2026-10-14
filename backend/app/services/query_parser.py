@@ -1,3 +1,16 @@
+"""
+query_parser.py
+---------------
+Multilingual ocean-science query normaliser and intent classifier.
+
+Classification strategy (layered):
+  1. LLM-based modality classification via llm_service.classify_intent()
+     → fast, context-aware; result stored on VisualizationIntent.primary_modality
+  2. Heuristic keyword matching (existing logic) — always runs for the
+     oceanographic variable / region / date extraction regardless of LLM result.
+  3. Heuristic is the sole router when LLM is unavailable or errors out.
+"""
+
 import re
 from datetime import datetime
 from ..models import VisualizationIntent
@@ -27,16 +40,21 @@ MULTILINGUAL_ALIASES = {
     "जून": "june", "अपवेलिंग": "upwelling", "क्या है": "what is",
     "3डी": "3d", "3D दृश्य": "3d view", "गहराई की परतें": "depth layers",
     # Tamil
-    "அரபிக்கடலில்": "arabian sea", "அரபிக்கடல்": "arabian sea", "வங்காள விரிகுடாவில்": "bay of bengal", "வங்காள விரிகுடா": "bay of bengal",
+    "அரபிக்கடலில்": "arabian sea", "அரபிக்கடல்": "arabian sea",
+    "வங்காள விரிகுடாவில்": "bay of bengal", "வங்காள விரிகுடா": "bay of bengal",
     "வெப்பநிலை": "temperature", "ஆழம்": "depth", "நீரோட்டம்": "current",
-    "நீரோட்ட வடிவம்": "current pattern", "மாற்றத்தைக்": "evolution", "மாற்றம்": "evolution", "மாறியது": "change",
+    "நீரோட்ட வடிவம்": "current pattern", "மாற்றத்தைக்": "evolution",
+    "மாற்றம்": "evolution", "மாறியது": "change",
     "ஜூன்": "june", "மேலெழுச்சி": "upwelling", "என்றால் என்ன": "what is",
     "3டி": "3d", "3D காட்சி": "3d view", "ஆழ அடுக்குகள்": "depth layers",
 }
 
+
 def normalize_multilingual_query(q: str) -> str:
     normalized = q
-    for source, target in sorted(MULTILINGUAL_ALIASES.items(), key=lambda item: len(item[0]), reverse=True):
+    for source, target in sorted(
+        MULTILINGUAL_ALIASES.items(), key=lambda item: len(item[0]), reverse=True
+    ):
         normalized = normalized.replace(source, target)
     return normalized
 
@@ -55,11 +73,14 @@ def find_dates(q: str):
     months = {
         "january": 1, "february": 2, "march": 3, "april": 4,
         "may": 5, "june": 6, "july": 7, "august": 8,
-        "september": 9, "october": 10, "november": 11, "december": 12
+        "september": 9, "october": 10, "november": 11, "december": 12,
     }
 
-    m = re.search(r"(january|february|march|april|may|june|july|august|"
-                  r"september|october|november|december)\s+(\d{4})", ql)
+    m = re.search(
+        r"(january|february|march|april|may|june|july|august|"
+        r"september|october|november|december)\s+(\d{4})",
+        ql,
+    )
     if m:
         month = months[m.group(1)]
         year = int(m.group(2))
@@ -79,7 +100,7 @@ def find_dates(q: str):
 def find_coordinates(q: str):
     patterns = [
         r"(-?\d+(?:\.\d+)?)\s*[°]?\s*(?:n|north)\D+(-?\d+(?:\.\d+)?)\s*[°]?\s*(?:e|east)",
-        r"latitude\s*(-?\d+(?:\.\d+)?)\D+longitude\s*(-?\d+(?:\.\d+)?)"
+        r"latitude\s*(-?\d+(?:\.\d+)?)\D+longitude\s*(-?\d+(?:\.\d+)?)",
     ]
     for pattern in patterns:
         m = re.search(pattern, q.lower())
@@ -102,18 +123,64 @@ def detect_region(q: str):
     return None
 
 
+def _heuristic_visualization_type(ql: str) -> tuple[str, bool]:
+    """
+    Return (visualization_type, is_3d) from keyword heuristics.
+    Unchanged from original logic.
+    """
+    three_d_keywords = [
+        "3d", "3-d", "three dimensional", "3 dimensional",
+        "depth layer", "depth layers", "underwater layer", "underwater layers", "3d view",
+    ]
+    if any(k in ql for k in three_d_keywords):
+        return "3d_depth_layers", True
+    if "depth" in ql or "vertical" in ql or "profile" in ql:
+        return "depth_time", False
+    if "compare" in ql or ("observation" in ql and "model" in ql):
+        return "comparison", False
+    if "time series" in ql or "timeseries" in ql:
+        return "timeseries", False
+    if "current" in ql or "vector" in ql:
+        return "current_map", False
+    if "animation" in ql or "evolution" in ql or "during" in ql:
+        return "animated_map", False
+    return "static_map", False
+
+
 def parse_query(query: str) -> VisualizationIntent:
+    """
+    Parse a natural-language query into a VisualizationIntent.
+
+    Attempts LLM-based modality classification first; falls back to
+    heuristics if the LLM is unavailable or fails.
+    """
     q = normalize_multilingual_query(query.strip())
     ql = q.lower()
 
+    # ------------------------------------------------------------------
+    # Step 1 – LLM modality classification (non-blocking, best-effort)
+    # ------------------------------------------------------------------
+    primary_modality: str | None = None
+    modality_reasoning: str | None = None
+    try:
+        from .llm_service import classify_intent  # lazy import to avoid circular deps
+        llm_result = classify_intent(q)
+        primary_modality = llm_result.get("primary_modality")
+        modality_reasoning = llm_result.get("reasoning")
+    except Exception:
+        pass  # silently fall through to heuristics
+
+    # ------------------------------------------------------------------
+    # Step 2 – Heuristic conceptual detection (always checked)
+    # ------------------------------------------------------------------
     conceptual_terms = [
         "what are", "what is", "explain", "how does",
-        "how do", "formation of", "what causes"
+        "how do", "formation of", "what causes",
     ]
     conceptual_topics = [
         "salt finger", "ocean eddy", "upwelling", "el niño",
         "enso", "iod", "thermocline", "ocean wave",
-        "wind sea", "swell", "stratification", "air-sea interaction"
+        "wind sea", "swell", "stratification", "air-sea interaction",
     ]
 
     if any(t in ql for t in conceptual_terms) and any(t in ql for t in conceptual_topics):
@@ -121,35 +188,30 @@ def parse_query(query: str) -> VisualizationIntent:
             category="conceptual",
             visualization="conceptual_diagram",
             region=detect_region(q),
+            primary_modality=primary_modality or "text",
+            modality_reasoning=modality_reasoning,
         )
 
+    # ------------------------------------------------------------------
+    # Step 3 – Entity extraction (variable, dates, coords, region)
+    # ------------------------------------------------------------------
     variable = find_variable(q)
     start, end = find_dates(q)
     lat, lon = find_coordinates(q)
     region = detect_region(q)
 
-    is_3d = False
-    three_d_keywords = [
-        "3d", "3-d", "three dimensional", "3 dimensional",
-        "depth layer", "depth layers", "underwater layer", "underwater layers", "3d view"
-    ]
-    if any(k in ql for k in three_d_keywords):
+    # ------------------------------------------------------------------
+    # Step 4 – Visualization type from heuristics
+    # ------------------------------------------------------------------
+    viz, is_3d = _heuristic_visualization_type(ql)
+
+    # If LLM says "3d" and heuristic didn't catch it, honour LLM
+    if primary_modality == "3d" and not is_3d:
         viz = "3d_depth_layers"
         is_3d = True
-        if not variable:
-            variable = "temperature"
-    elif "depth" in ql or "vertical" in ql or "profile" in ql:
-        viz = "depth_time"
-    elif "compare" in ql or "observation" in ql and "model" in ql:
-        viz = "comparison"
-    elif "time series" in ql or "timeseries" in ql:
-        viz = "timeseries"
-    elif "current" in ql or "vector" in ql:
-        viz = "current_map"
-    elif "animation" in ql or "evolution" in ql or "during" in ql:
-        viz = "animated_map"
-    else:
-        viz = "static_map"
+
+    if is_3d and not variable:
+        variable = "temperature"
 
     return VisualizationIntent(
         category="data",
@@ -161,4 +223,6 @@ def parse_query(query: str) -> VisualizationIntent:
         latitude=lat,
         longitude=lon,
         is_3d=is_3d,
+        primary_modality=primary_modality,
+        modality_reasoning=modality_reasoning,
     )

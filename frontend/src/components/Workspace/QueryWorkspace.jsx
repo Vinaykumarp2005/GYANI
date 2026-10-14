@@ -1,5 +1,5 @@
 import React from "react";
-import { Loader2, Sparkles, Compass, ArrowRight } from "lucide-react";
+import { Loader2, Sparkles, Compass, ArrowRight, History } from "lucide-react";
 
 export default function QueryWorkspace({
   query,
@@ -9,6 +9,7 @@ export default function QueryWorkspace({
   examples = [],
   t,
   onSelectExample,
+  onOpenHistory,
 }) {
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -31,9 +32,22 @@ export default function QueryWorkspace({
             </p>
           </div>
         </div>
-        <span className="workspace-subtitle-badge">
-          AI + INCOIS Numerical NetCDF Engine
-        </span>
+        <div className="workspace-header-actions">
+          {onOpenHistory && (
+            <button
+              type="button"
+              onClick={onOpenHistory}
+              className="workspace-history-btn"
+              title="Recent Queries History"
+            >
+              <History size={13} />
+              <span>Query History</span>
+            </button>
+          )}
+          <span className="workspace-subtitle-badge">
+            AI + INCOIS Numerical NetCDF Engine
+          </span>
+        </div>
       </div>
 
       <div className="query-input-wrapper">

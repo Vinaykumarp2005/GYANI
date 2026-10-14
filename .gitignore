@@ -57,6 +57,10 @@ backend/data/*.nc
 backend/data/*.nc4
 backend/data/*.netcdf
 backend/data/*.zarr/
+backend/data/*.db
+backend/data/*.sqlite3
+*.db
+*.sqlite3
 
 # Generated media
 
