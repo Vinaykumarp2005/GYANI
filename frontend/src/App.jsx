@@ -1,4 +1,4 @@
-import { useMemo, useState, useRef } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
 import InstitutionalHeader from "./components/Header/InstitutionalHeader";
 import INCOISNavRibbon from "./components/Header/INCOISNavRibbon";
 import AdvisoryTicker from "./components/Common/AdvisoryTicker";
@@ -8,6 +8,7 @@ import INCOISServiceCards from "./components/Home/INCOISServiceCards";
 import QueryWorkspace from "./components/Workspace/QueryWorkspace";
 import VisualizationViewport from "./components/Viewport/VisualizationViewport";
 import ScientificMetadataPanel from "./components/Metadata/ScientificMetadataPanel";
+import QueryHistoryDrawer from "./components/History/QueryHistoryDrawer";
 import { AlertCircle, Box, Compass, Sparkles, ChevronRight, Waves, Layers } from "lucide-react";
 
 const API = "http://localhost:8000";
@@ -26,14 +27,14 @@ const copy = {
     exploreBtn: "Explore 3D Depth Layers",
     instrumentBtn: "View 3D Argo Profiler",
     question: "Ocean-Science Query",
-    placeholder: "Ask an oceanographic question or query 3D depth layers (e.g. 'Show 3D temperature profile in Arabian Sea')...",
-    generate: "Generate Visualization",
-    generating: "Generating...",
+    placeholder: "Ask an oceanographic question, request a 2D/3D visualization, or generate an illustration...",
+    generate: "Submit Query",
+    generating: "Analyzing with Gemini...",
     try: "Try asking:",
     generated: "GENERATED RESULT",
     intent: "Detected Intent",
     provenance: "Dataset & Provenance",
-    footer: "Prototype developed for INCOIS ocean-science inquiry. Synthetic demo dataset is utilized for testing — replace with verified INCOIS operational NetCDF/Zarr data before scientific use.",
+    footer: "Prototype developed for INCOIS ocean-science inquiry. Powered by Google Gemini AI & INCOIS Numerical NetCDF Engine.",
     error: "Generation failed",
     imageAlt: "Generated scientific visualization",
   },
@@ -43,14 +44,14 @@ const copy = {
     exploreBtn: "3D లోతు పొరలను చూడండి",
     instrumentBtn: "3D ఆర్గో ప్రొఫైలర్ నమూనా",
     question: "సముద్ర శాస్త్ర ప్రశ్న",
-    placeholder: "సముద్ర శాస్త్ర ప్రశ్నించండి లేదా 3D లోతు పొరలను అన్వేషించండి (ఉదా. 'అరేబియా సముద్రంలో ఉష్ణోగ్రత 3D దృశ్యం')...",
-    generate: "విజువలైజేషన్ రూపొందించండి",
-    generating: "రూపొందిస్తోంది...",
+    placeholder: "సముద్ర శాస్త్ర ప్రశ్నించండి లేదా 3D లోతు పొరలను అన్వేషించండి...",
+    generate: "ప్రశ్న సమర్పించండి",
+    generating: "విశ్లేషిస్తోంది...",
     try: "ప్రయత్నించండి:",
     generated: "రూపొందించిన ఫలితం",
     intent: "గుర్తించిన ఉద్దేశ్యం",
     provenance: "డేటాసెట్ / మూల సమాచారం",
-    footer: "ఇది INCOIS సముద్ర పరిశోధన నమూనా మాత్రమే. డెమో డేటాసెట్ కృత్రిమమైనది. అధికారిక వినియోగానికి ముందు ధృవీకరించిన INCOIS డేటాతో భర్తీ చేయండి.",
+    footer: "ఇది INCOIS సముద్ర పరిశోధన నమూనా మాత్రమే. జెమిని AI ఆధారిత విశ్లేషణ.",
     error: "విజువలైజేషన్ రూపొందించలేకపోయింది",
     imageAlt: "రూపొందించిన శాస్త్రీయ విజువలైజేషన్",
   },
@@ -60,14 +61,14 @@ const copy = {
     exploreBtn: "3D गहराई की परतें देखें",
     instrumentBtn: "3D आर्गो फ्लोट मॉडल",
     question: "समुद्र-विज्ञान प्रश्न",
-    placeholder: "समुद्र-विज्ञान का प्रश्न पूछें या 3D गहराई की परतें देखें (उदा. 'अरब सागर में तापमान का 3D दृश्य')...",
-    generate: "विज़ुअलाइज़ेशन बनाएँ",
-    generating: "बनाया जा रहा है...",
+    placeholder: "समुद्र-विज्ञान का प्रश्न पूछें या 3D गहराई की परतें देखें...",
+    generate: "प्रश्न सबमिट करें",
+    generating: "जेमिनी से विश्लेषण जारी है...",
     try: "आज़माएँ:",
     generated: "तैयार परिणाम",
     intent: "पहचाना गया उद्देश्य",
     provenance: "डेटासेट / स्रोत",
-    footer: "INCOIS समुद्र-विज्ञान अनुसंधान के लिए विकसित प्रोटोटाइप। डेमो डेटासेट कृत्रिम है - वैज्ञानिक उपयोग से पहले सत्यापित INCOIS डेटा से बदलें।",
+    footer: "INCOIS समुद्र-विज्ञान अनुसंधान के लिए विकसित प्रोटोटाइप। गूगल जेमिनी एआई द्वारा संचालित।",
     error: "विज़ुअलाइज़ेशन नहीं बन सका",
     imageAlt: "तैयार वैज्ञानिक विज़ुअलाइज़ेशन",
   },
@@ -77,14 +78,14 @@ const copy = {
     exploreBtn: "3D ஆழ அடுக்குகளைக் காட்டு",
     instrumentBtn: "3D ஆர்கோ மிதவை மாதிரி",
     question: "கடலியல் கேள்வி",
-    placeholder: "கடலியல் கேள்வியைக் கேளுங்கள் அல்லது 3D ஆழ அடுக்குகளை ஆராயுங்கள் (எ.கா. 'அரபிக்கடலில் வெப்பநிலை 3D காட்சி')...",
-    generate: "காட்சிப்படுத்தலை உருவாக்கு",
-    generating: "உருவாக்கப்படுகிறது...",
+    placeholder: "கடலியல் கேள்வியைக் கேளுங்கள் அல்லது 3D ஆழ அடுக்குகளை ஆராயுங்கள்...",
+    generate: "கேள்வி சமர்ப்பிக்கவும்",
+    generating: "ஆராய்கிறது...",
     try: "முயற்சிக்கவும்:",
     generated: "உருவாக்கப்பட்ட முடிவு",
     intent: "கண்டறியப்பட்ட நோக்கம்",
     provenance: "தரவுத்தொகுப்பு / மூலம்",
-    footer: "INCOIS கடலியல் பயன்பாட்டுக்கான முன்மாதிரி. மாதிரி தரவுத்தொகுப்பு செயற்கையானது - அறிவியல் பயன்பாட்டிற்கு முன் சரிபார்க்கப்பட்ட INCOIS தரவால் மாற்றவும்.",
+    footer: "INCOIS கடலியல் பயன்பாட்டுக்கான முன்மாதிரி. கூகிள் ஜெமினி ஏஐ மூலம் இயக்கப்படுகிறது.",
     error: "காட்சிப்படுத்தலை உருவாக்க முடியவில்லை",
     imageAlt: "உருவாக்கப்பட்ட அறிவியல் காட்சிப்படுத்தல்",
   },
@@ -92,36 +93,36 @@ const copy = {
 
 const examples = {
   en: [
+    "What is ocean forecast.",
+    "Explain the importance of ocean salinity.",
     "Show 3D temperature profile in Arabian Sea June 2025",
     "Show SST evolution in the Arabian Sea during June 2025",
-    "Show SSH evolution in the Bay of Bengal",
-    "How did temperature change with depth at 10 N 75 E during June 2025?",
-    "Show the current pattern during June 2025",
-    "What is coastal upwelling?",
+    "Visualize ocean temperature at different depths.",
+    "Generate an illustration of underwater ecosystems.",
   ],
   te: [
+    "సముద్ర సూచన అంటే ఏమిటి?",
+    "సముద్రపు లవణీయత ప్రాముఖ్యతను వివరించండి.",
     "అరేబియా సముద్రంలో ఉష్ణోగ్రత 3D దృశ్యం చూపించండి",
     "జూన్ 2025లో అరేబియా సముద్రంలో SST మార్పును చూపించండి",
-    "బంగాళాఖాతంలో SSH మార్పును చూపించండి",
-    "జూన్ 2025లో 10 N 75 E వద్ద లోతుతో ఉష్ణోగ్రత ఎలా మారింది?",
-    "జూన్ 2025లో సముద్ర ప్రవాహ నమూనాను చూపించండి",
-    "తీర ప్రాంత అప్‌వెల్లింగ్ అంటే ఏమిటి?",
+    "వివిధ లోతుల్లో సముద్ర ఉష్ణోగ్రతను దృశ్యమానం చేయండి",
+    "నీటి అడుగున పర్యావరణ వ్యవస్థ చిత్రాన్ని రూపొందించండి",
   ],
   hi: [
+    "समुद्री पूर्वानुमान क्या है?",
+    "समुद्र की लवणता का महत्व समझाइए।",
     "अरब सागर में तापमान का 3D दृश्य दिखाएँ",
     "जून 2025 में अरब सागर में SST का बदलाव दिखाएँ",
-    "बंगाल की खाड़ी में SSH का बदलाव दिखाएँ",
-    "जून 2025 में 10 N 75 E पर गहराई के साथ तापमान कैसे बदला?",
-    "जून 2025 में समुद्री धारा का पैटर्न दिखाएँ",
-    "तटीय अपवेलिंग क्या है?",
+    "विभिन्न गहराइयों पर समुद्री तापमान की कल्पना करें",
+    "पानी के नीचे के पारिस्थितिकी तंत्र का चित्र बनाएं",
   ],
   ta: [
+    "கடல் முன்னறிவிப்பு என்றால் என்ன?",
+    "கடல் உவர்ப்பியலின் முக்கியத்துவத்தை விளக்குங்கள்.",
     "அரபிக்கடலில் வெப்பநிலை 3D காட்சி காட்டு",
     "ஜூன் 2025 இல் அரபிக்கடலில் SST மாற்றத்தைக் காட்டு",
-    "வங்காள விரிகுடாவில் SSH மாற்றத்தைக் காட்டு",
-    "ஜூன் 2025 இல் 10 N 75 E இடத்தில் ஆழத்துடன் வெப்பநிலை எவ்வாறு மாறியது?",
-    "ஜூன் 2025 இல் கடல் நீரோட்ட வடிவத்தைக் காட்டு",
-    "கடலோர மேலெழுச்சி என்றால் என்ன?",
+    "பல்வேறு ஆழங்களில் கடல் வெப்பநிலையைக் காட்சிப்படுத்துங்கள்",
+    "நீருக்கடியில் உள்ள சுற்றுச்சூழல் அமைப்பின் விளக்கப்படத்தை உருவாக்கவும்",
   ],
 };
 
@@ -133,6 +134,10 @@ export default function App() {
   const [error, setError] = useState("");
   const [showInstrumentModel, setShowInstrumentModel] = useState(false);
 
+  // History State
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [historyItems, setHistoryItems] = useState([]);
+
   // Temporal animation state
   const [timeIndex, setTimeIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -142,6 +147,22 @@ export default function App() {
 
   const t = copy[language];
   const currentExamples = useMemo(() => examples[language], [language]);
+
+  const fetchHistory = async () => {
+    try {
+      const response = await fetch(`${API}/api/history`);
+      if (response.ok) {
+        const data = await response.json();
+        setHistoryItems(data.history || []);
+      }
+    } catch (e) {
+      console.warn("[GYANI] History fetch failed", e);
+    }
+  };
+
+  useEffect(() => {
+    fetchHistory();
+  }, []);
 
   function changeLanguage(next) {
     setLanguage(next);
@@ -179,6 +200,7 @@ export default function App() {
       if (!response.ok) throw new Error(data.detail || t.error);
       setResult(data);
       scrollToWorkspace();
+      fetchHistory();
     } catch (e) {
       setError(e.message);
     } finally {
@@ -189,6 +211,25 @@ export default function App() {
   const handleSelectExample = (ex) => {
     setQuery(ex);
     handleGenerate(ex);
+  };
+
+  const handleSelectHistoryItem = (item) => {
+    setQuery(item.query);
+    if (item.result && item.result.success) {
+      setResult(item.result);
+      scrollToWorkspace();
+    } else {
+      handleGenerate(item.query);
+    }
+  };
+
+  const handleClearHistory = async () => {
+    try {
+      await fetch(`${API}/api/history`, { method: "DELETE" });
+      setHistoryItems([]);
+    } catch (e) {
+      console.error("[GYANI] Failed to clear history", e);
+    }
   };
 
   return (
@@ -218,35 +259,32 @@ export default function App() {
             <h1 className="hero-main-heading">{t.heroTitle}</h1>
             <p className="hero-description">{t.heroSubtitle}</p>
 
-            <div className="hero-actions-row">
+            <div className="hero-cta-group">
               <button
                 type="button"
-                onClick={() => handleGenerate(currentExamples[0])}
+                onClick={() => {
+                  setQuery("Show 3D temperature profile in Arabian Sea June 2025");
+                  handleGenerate("Show 3D temperature profile in Arabian Sea June 2025");
+                }}
                 className="hero-primary-btn"
               >
-                <Layers size={17} />
+                <Box size={16} />
                 <span>{t.exploreBtn}</span>
-                <ChevronRight size={15} />
+                <ChevronRight size={14} />
               </button>
 
               <button
                 type="button"
-                onClick={() => setShowInstrumentModel(!showInstrumentModel)}
-                className={`hero-secondary-btn ${showInstrumentModel ? "active" : ""}`}
+                onClick={() => setShowInstrumentModel(true)}
+                className="hero-secondary-btn"
               >
-                <Box size={16} />
-                <span>{showInstrumentModel ? "Hide 3D Profiler" : t.instrumentBtn}</span>
+                <Layers size={16} />
+                <span>{t.instrumentBtn}</span>
               </button>
             </div>
-
-            {/* Modal Drawer for 3D Argo Profiler */}
-            {showInstrumentModel && (
-              <ArgoFloat3D onClose={() => setShowInstrumentModel(false)} />
-            )}
           </div>
 
-          <div className="hero-globe-block">
-            {/* Interactive Revolving 3D Ocean Globe */}
+          <div className="hero-3d-stage">
             <OceanGlobe3D onSelectStationQuery={(q) => handleGenerate(q)} />
           </div>
         </div>
@@ -262,7 +300,7 @@ export default function App() {
           <div>
             <h2 className="banner-title">GYANI Scientific Inquiry Workspace</h2>
             <p className="banner-subtitle">
-              Submit your natural-language questions or inspect 3D temperature depth slices.
+              Intelligent query routing across Explanatory Text, 2D Maps, 3D Depth Layers, and AI Illustrations.
             </p>
           </div>
         </div>
@@ -275,6 +313,8 @@ export default function App() {
           examples={currentExamples}
           t={t}
           onSelectExample={handleSelectExample}
+          onOpenHistory={() => setHistoryOpen(true)}
+          historyCount={historyItems.length}
         />
 
         {error && (
@@ -304,6 +344,20 @@ export default function App() {
           </div>
         )}
       </main>
+
+      {/* Query History Drawer */}
+      <QueryHistoryDrawer
+        isOpen={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+        history={historyItems}
+        onSelectHistoryItem={handleSelectHistoryItem}
+        onClearHistory={handleClearHistory}
+      />
+
+      {/* 3D Argo Profiler Interactive Modal */}
+      {showInstrumentModel && (
+        <ArgoFloat3D onClose={() => setShowInstrumentModel(false)} />
+      )}
 
       {/* 7. Institutional Footer */}
       <footer className="institutional-footer">

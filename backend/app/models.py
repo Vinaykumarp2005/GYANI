@@ -1,10 +1,19 @@
 from pydantic import BaseModel, Field
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Literal
 
 
 class VisualizationRequest(BaseModel):
-    query: str = Field(min_length=3)
+    query: str = Field(min_length=2)
     language: Optional[str] = "en"
+
+
+class GeminiClassification(BaseModel):
+    category: Literal["TEXT", "2D_VISUALIZATION", "3D_VISUALIZATION", "IMAGE_GENERATION"]
+    reason: str
+    parameters: Dict[str, Any] = Field(default_factory=dict)
+    requires_scientific_data: bool = False
+    requires_clarification: bool = False
+    clarification_message: Optional[str] = None
 
 
 class VisualizationIntent(BaseModel):
@@ -18,6 +27,7 @@ class VisualizationIntent(BaseModel):
     longitude: Optional[float] = None
     depth: Optional[float] = None
     is_3d: Optional[bool] = False
+    gemini_reason: Optional[str] = None
 
 
 class CoordinateGrid(BaseModel):
@@ -41,3 +51,13 @@ class ThreeDGridResponse(BaseModel):
     value_bounds: Dict[str, float]
     layers: List[DepthLayer]
     metadata: Dict[str, Any]
+
+
+class QueryHistoryItem(BaseModel):
+    id: str
+    query: str
+    category: str
+    reason: Optional[str] = None
+    parameters: Dict[str, Any] = Field(default_factory=dict)
+    timestamp: str
+    result: Optional[Dict[str, Any]] = None

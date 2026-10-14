@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Database, ShieldCheck, AlertTriangle, Info, MapPin, Calendar, Layers, ChevronDown, ChevronUp } from "lucide-react";
+import { Database, ShieldCheck, AlertTriangle, Info, MapPin, Calendar, Layers, ChevronDown, ChevronUp, Palette, Sparkles } from "lucide-react";
 
 export default function ScientificMetadataPanel({ result }) {
   const [showRaw, setShowRaw] = useState(false);
@@ -12,26 +12,36 @@ export default function ScientificMetadataPanel({ result }) {
 
   const classification =
     metadata.scientific_classification ||
-    (result.category === "conceptual" ? "CONCEPTUAL_SCHEMATIC" : "SYNTHETIC_PROTOTYPE");
+    (result.category === "IMAGE_GENERATION"
+      ? "AI_GENERATED_ILLUSTRATION"
+      : result.category === "TEXT"
+      ? "CONCEPTUAL_SCHEMATIC"
+      : "SYNTHETIC_PROTOTYPE");
 
   const classificationConfig = {
     SYNTHETIC_PROTOTYPE: {
       label: "Synthetic Prototype (Demo Model)",
       colorClass: "badge-synthetic",
       icon: AlertTriangle,
-      description: "Generated for software testing. Not verified INCOIS observation or operational forecast.",
+      description: "Numerical dataset generated for software evaluation. Not operational INCOIS forecast.",
     },
     CONCEPTUAL_SCHEMATIC: {
-      label: "Conceptual Scientific Illustration",
+      label: "Conceptual Scientific Synthesis",
       colorClass: "badge-conceptual",
       icon: Info,
-      description: "Educational schematic diagram explaining oceanographic physics, not measured data.",
+      description: "Educational synthesis explaining oceanographic physics, atmospheric forces, or marine parameters.",
+    },
+    AI_GENERATED_ILLUSTRATION: {
+      label: "AI Generated Illustration (Non-Measurement)",
+      colorClass: "badge-ai-art",
+      icon: Palette,
+      description: "Generative artistic illustration representing an oceanographic theme. Does not represent in-situ measurements.",
     },
     INCOIS_VERIFIED: {
       label: "INCOIS Verified Data",
       colorClass: "badge-verified",
       icon: ShieldCheck,
-      description: "Derived from verified INCOIS observation or numerical forecast archives.",
+      description: "Derived from verified INCOIS observation or operational numerical forecast archives.",
     },
   }[classification] || {
     label: classification,
@@ -42,7 +52,7 @@ export default function ScientificMetadataPanel({ result }) {
 
   const BadgeIcon = classificationConfig.icon;
 
-  const variable = grid3d?.variable || intent.variable || "SST";
+  const variable = grid3d?.variable || intent.variable || (result.category === "TEXT" ? "Ocean Concept" : "SST");
   const units = grid3d?.units || (variable === "temperature" || variable === "sst" ? "°C" : "");
   const timeStart = metadata.time_start || intent.start_date || "2025-06-01";
   const timeEnd = metadata.time_end || intent.end_date || "2025-06-30";
@@ -68,6 +78,17 @@ export default function ScientificMetadataPanel({ result }) {
         {classificationConfig.description}
       </p>
 
+      {/* Gemini Classification Reason Banner */}
+      {result.reason && (
+        <div className="meta-gemini-reason-card">
+          <Sparkles size={14} className="gemini-spark-icon" />
+          <div className="gemini-reason-content">
+            <span className="reason-title">Gemini Decision Logic ({result.category}):</span>
+            <span className="reason-text">{result.reason}</span>
+          </div>
+        </div>
+      )}
+
       <div className="meta-metrics-grid">
         <div className="metric-cell">
           <span className="metric-label">Target Variable</span>
@@ -75,8 +96,8 @@ export default function ScientificMetadataPanel({ result }) {
         </div>
 
         <div className="metric-cell">
-          <span className="metric-label">Visualization Type</span>
-          <span className="metric-val highlight">{intent.visualization || "2D Surface Map"}</span>
+          <span className="metric-label">Execution Category</span>
+          <span className="metric-val highlight">{result.category || intent.visualization || "2D Surface Map"}</span>
         </div>
 
         <div className="metric-cell">
@@ -101,7 +122,7 @@ export default function ScientificMetadataPanel({ result }) {
         </div>
 
         <div className="metric-cell">
-          <span className="metric-label">Data Source</span>
+          <span className="metric-label">Engine / Data Source</span>
           <span className="metric-val truncate" title={metadata.source || metadata.provenance}>
             {metadata.source || metadata.provenance || "NetCDF Prototype Model"}
           </span>
@@ -115,13 +136,13 @@ export default function ScientificMetadataPanel({ result }) {
           onClick={() => setShowRaw(!showRaw)}
           className="raw-toggle-btn"
         >
-          <span>{showRaw ? "Hide Technical Debug JSON" : "Inspect Raw Intent & Schema"}</span>
+          <span>{showRaw ? "Hide Technical Debug JSON" : "Inspect Raw Gemini Intent & Schema"}</span>
           {showRaw ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
         </button>
 
         {showRaw && (
           <div className="raw-json-inspector">
-            <pre>{JSON.stringify({ intent: result.intent, metadata: result.metadata }, null, 2)}</pre>
+            <pre>{JSON.stringify({ classification: result.classification, intent: result.intent, metadata: result.metadata }, null, 2)}</pre>
           </div>
         )}
       </div>
