@@ -505,7 +505,7 @@ body {
 .ticker-marquee-content {
   display: inline-block;
   padding-left: 100%;
-  animation: marquee 45s linear infinite;
+  animation: marquee 80s linear infinite;
   font-size: 0.78rem;
   color: #78350f;
 }
@@ -896,21 +896,118 @@ body {
 .buoy-dot.red { background: #ef4444; box-shadow: 0 0 5px #ef4444; }
 
 .globe-buoy-tooltip {
-  background: rgba(6, 21, 40, 0.95);
-  border: 1px solid #00ffcc;
-  border-radius: 6px;
-  padding: 6px 10px;
+  background: rgba(6, 21, 40, 0.94);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1.5px solid #00ffcc;
+  border-radius: 8px;
+  padding: 8px 12px;
   color: #ffffff;
   font-size: 0.72rem;
-  min-width: 180px;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
+  /* Auto-adjusting sizing */
+  width: max-content;
+  max-width: min(260px, 80vw);
+  min-width: 160px;
+  box-sizing: border-box;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55), 0 0 10px rgba(0, 255, 204, 0.2);
   pointer-events: none;
+  line-height: 1.4;
+  animation: tooltipFadeIn 0.18s ease-out;
 }
 
-.tooltip-title { font-weight: 700; color: #00ffcc; margin-bottom: 2px; }
-.tooltip-coords { font-family: var(--font-mono); color: #94a3b8; font-size: 0.68rem; }
-.tooltip-desc { font-size: 0.68rem; color: #cbd5e1; margin-top: 3px; }
-.tooltip-click-hint { font-size: 0.65rem; color: #facc15; font-weight: 600; margin-top: 4px; }
+.globe-buoy-tooltip.tooltip-omni {
+  border-color: #00ffcc;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55), 0 0 10px rgba(0, 255, 204, 0.25);
+}
+
+.globe-buoy-tooltip.tooltip-argo {
+  border-color: #38bdf8;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55), 0 0 10px rgba(56, 189, 248, 0.25);
+}
+
+.globe-buoy-tooltip.tooltip-tsunami {
+  border-color: #ef4444;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55), 0 0 10px rgba(239, 68, 68, 0.25);
+}
+
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.tooltip-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.tooltip-badge {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  display: inline-block;
+}
+
+.tooltip-badge.badge-omni {
+  background: rgba(0, 255, 204, 0.15);
+  color: #00ffcc;
+  border: 1px solid rgba(0, 255, 204, 0.3);
+}
+
+.tooltip-badge.badge-argo {
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+.tooltip-badge.badge-tsunami {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.tooltip-title {
+  font-weight: 700;
+  color: #f8fafc;
+  font-size: 0.78rem;
+  margin-bottom: 2px;
+  line-height: 1.25;
+}
+
+.tooltip-coords {
+  font-family: var(--font-mono, monospace);
+  color: #94a3b8;
+  font-size: 0.65rem;
+  white-space: nowrap;
+}
+
+.tooltip-desc {
+  font-size: 0.68rem;
+  color: #cbd5e1;
+  margin-top: 4px;
+  line-height: 1.35;
+  white-space: normal;
+}
+
+.tooltip-action {
+  font-size: 0.64rem;
+  color: #facc15;
+  font-weight: 600;
+  margin-top: 6px;
+  padding-top: 4px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.15);
+}
 
 /* --------------------------------------------------------------------------
    INCOIS Operational Core Service Tiles Grid

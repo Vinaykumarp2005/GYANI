@@ -14,8 +14,8 @@ function latLonToVector3(lat, lon, radius) {
   return new THREE.Vector3(x, y, z);
 }
 
-// Observation Buoy Pin Component with Pulsing Halo
-function BuoyStationPin({ station, onSelect, globeRadius = 3.25 }) {
+// Observation Buoy Pin Component with Pulsing Halo & Auto-Adjusting Tooltip
+function BuoyStationPin({ station, onSelect, onHoverStation, globeRadius = 3.25 }) {
   const [hovered, setHovered] = useState(false);
   const pinRef = useRef();
   const ringRef = useRef();
@@ -52,8 +52,12 @@ function BuoyStationPin({ station, onSelect, globeRadius = 3.25 }) {
         onPointerOver={(e) => {
           e.stopPropagation();
           setHovered(true);
+          if (onHoverStation) onHoverStation(station);
         }}
-        onPointerOut={() => setHovered(false)}
+        onPointerOut={() => {
+          setHovered(false);
+          if (onHoverStation) onHoverStation(null);
+        }}
         onClick={(e) => {
           e.stopPropagation();
           if (onSelect) onSelect(station);
@@ -79,19 +83,26 @@ function BuoyStationPin({ station, onSelect, globeRadius = 3.25 }) {
         />
       </mesh>
 
-      {/* Interactive Telemetry Tooltip */}
+      {/* Interactive Telemetry Tooltip with Auto-Adjusted Sizing */}
       {hovered && (
-        <Html distanceFactor={7.8} zIndexRange={[150, 0]}>
-          <div className="globe-buoy-tooltip">
-            <div className="tooltip-badge">
-              {station.type === "omni"
-                ? "INCOIS OMNI BUOY"
-                : station.type === "tsunami"
-                ? "ITEWC TSUNAMI BPR"
-                : "ARGO PROFILER CORRIDOR"}
+        <Html
+          position={[0, 0.16, 0]}
+          center
+          distanceFactor={7.5}
+          zIndexRange={[150, 0]}
+        >
+          <div className={`globe-buoy-tooltip tooltip-${station.type}`}>
+            <div className="tooltip-header">
+              <span className={`tooltip-badge badge-${station.type}`}>
+                {station.type === "omni"
+                  ? "INCOIS OMNI BUOY"
+                  : station.type === "tsunami"
+                  ? "ITEWC TSUNAMI BPR"
+                  : "ARGO TRANSECT"}
+              </span>
+              <span className="tooltip-coords">{`${station.lat.toFixed(1)}°N, ${station.lon.toFixed(1)}°E`}</span>
             </div>
             <div className="tooltip-title">{station.name}</div>
-            <div className="tooltip-coords">{`${station.lat.toFixed(1)}°N, ${station.lon.toFixed(1)}°E`}</div>
             <div className="tooltip-desc">{station.desc}</div>
             <div className="tooltip-action">⚡ Click to load 3D analysis in GYANI</div>
           </div>
@@ -133,7 +144,7 @@ function FallbackSphere({ radius = 3.25 }) {
 }
 
 // Revolving Ocean Twin Globe Component
-function RealEarthGlobe({ isPaused, onSelectStation }) {
+function RealEarthGlobe({ isPaused, onSelectStation, onHoverStation }) {
   const globeGroupRef = useRef();
   const radius = 3.25;
 
@@ -186,10 +197,10 @@ function RealEarthGlobe({ isPaused, onSelectStation }) {
     },
   ];
 
-  // Smooth revolving rotation around Earth's tilted axial axis
+  // Smooth revolving rotation around Earth's tilted axial axis (decreased speed)
   useFrame((state, delta) => {
     if (globeGroupRef.current && !isPaused) {
-      globeGroupRef.current.rotation.y += delta * 0.12;
+      globeGroupRef.current.rotation.y += delta * 0.04;
     }
   });
 
@@ -220,6 +231,7 @@ function RealEarthGlobe({ isPaused, onSelectStation }) {
           station={st}
           globeRadius={radius}
           onSelect={onSelectStation}
+          onHoverStation={onHoverStation}
         />
       ))}
     </group>
@@ -227,7 +239,9 @@ function RealEarthGlobe({ isPaused, onSelectStation }) {
 }
 
 export default function OceanGlobe3D({ onSelectStationQuery }) {
-  const [isInteracting, setIsInteracting] = useState(false);
+  const [hoveredStation, setHoveredStation] = useState(null);
+  const [hoveredLegend, setHoveredLegend] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
   const controlsRef = useRef();
 
   const handleReset = () => {
@@ -235,6 +249,9 @@ export default function OceanGlobe3D({ onSelectStationQuery }) {
       controlsRef.current.reset();
     }
   };
+
+  // Revolving pauses when hovering over any of the 3 observation types (pins or legend) or dragging
+  const isModelPaused = Boolean(hoveredStation || hoveredLegend || isDragging);
 
   return (
     <div className="ocean-globe-3d-card">
@@ -257,11 +274,7 @@ export default function OceanGlobe3D({ onSelectStationQuery }) {
         </div>
       </div>
 
-      <div
-        className="globe-canvas-wrapper"
-        onMouseEnter={() => setIsInteracting(true)}
-        onMouseLeave={() => setIsInteracting(false)}
-      >
+      <div className="globe-canvas-wrapper">
         <Canvas
           camera={{ position: [0, 1.0, 7.8], fov: 45 }}
           gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
@@ -279,27 +292,45 @@ export default function OceanGlobe3D({ onSelectStationQuery }) {
             minDistance={4.2}
             maxDistance={14}
             autoRotate={false}
+            onStart={() => setIsDragging(true)}
+            onEnd={() => setIsDragging(false)}
           />
 
           <RealEarthGlobe
-            isPaused={isInteracting}
+            isPaused={isModelPaused}
+            onHoverStation={setHoveredStation}
             onSelectStation={(st) => {
               if (onSelectStationQuery) onSelectStationQuery(st.query);
             }}
           />
         </Canvas>
 
-        {/* Observation Network Color-Coded Legend */}
+        {/* Observation Network Color-Coded Legend - pauses rotation on hover */}
         <div className="globe-legend-overlay">
-          <div className="legend-item">
+          <div
+            className={`legend-item ${hoveredLegend === "omni" ? "active" : ""}`}
+            onMouseEnter={() => setHoveredLegend("omni")}
+            onMouseLeave={() => setHoveredLegend(null)}
+            title="Hover to inspect INCOIS OMNI Moored Buoys"
+          >
             <span className="buoy-dot green"></span>
             <span>INCOIS OMNI Moored Buoys</span>
           </div>
-          <div className="legend-item">
+          <div
+            className={`legend-item ${hoveredLegend === "argo" ? "active" : ""}`}
+            onMouseEnter={() => setHoveredLegend("argo")}
+            onMouseLeave={() => setHoveredLegend(null)}
+            title="Hover to inspect Robotic Argo Hydrographic Transects"
+          >
             <span className="buoy-dot cyan"></span>
             <span>Robotic Argo Hydrographic Transects</span>
           </div>
-          <div className="legend-item">
+          <div
+            className={`legend-item ${hoveredLegend === "tsunami" ? "active" : ""}`}
+            onMouseEnter={() => setHoveredLegend("tsunami")}
+            onMouseLeave={() => setHoveredLegend(null)}
+            title="Hover to inspect ITEWC Tsunami Bottom Recorders (BPR)"
+          >
             <span className="buoy-dot red"></span>
             <span>ITEWC Tsunami Bottom Recorders (BPR)</span>
           </div>
