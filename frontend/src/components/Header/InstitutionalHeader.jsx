@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Globe } from "lucide-react";
-import CompassGyro3D from "../ThreeD/CompassGyro3D";
+import logo from "../../assets/logo.png";
 
 export default function InstitutionalHeader({ language, onLanguageChange, languages, copy }) {
   const [fontSizeOffset, setFontSizeOffset] = useState(0);
@@ -81,13 +81,13 @@ export default function InstitutionalHeader({ language, onLanguageChange, langua
         </div>
       </div>
 
-      {/* 2. Main Institutional Identity & Revolving 3D Compass Gyroscope */}
+      {/* 2. Main Institutional Identity & Official Emblem Logo */}
       <div className="header-main">
         <div className="header-main-inner">
           <div className="incois-logo-block">
-            {/* Precision 3D Marine Compass Gyroscope Crest */}
-            <div className="incois-crest-3d">
-              <CompassGyro3D />
+            {/* Official INCOIS Crest Logo */}
+            <div className="incois-crest-logo">
+              <img src={logo} alt="INCOIS Official Emblem" className="incois-header-logo" />
             </div>
 
             <div className="incois-titles">
